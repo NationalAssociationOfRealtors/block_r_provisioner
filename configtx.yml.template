@@ -1,0 +1,55 @@
+---
+################################################################################
+#
+#   Block R Profile
+#
+#   Used by the configtxgen tool to generate the genesis block.
+#
+################################################################################
+Profiles:
+    Genesis:
+        Orderer:
+            <<: *OrdererDefaults
+            Organizations:
+                - *OrdererOrg
+        Consortiums:
+             RealtorAssociations:
+                Organizations:
+                - *PeerOrg
+    Channels:
+        Consortium: RealtorAssociations 
+        Application:
+            <<: *ApplicationDefaults
+            Organizations:
+                - *PeerOrg
+Organizations:
+    - &OrdererOrg
+        Name: OrdererOrg
+        ID: OrdererOrg
+        MSPDir: crypto-config/ordererOrganizations/blockr/orderers/vm1.blockr/msp
+        AdminPrincipal: Role.ADMIN
+    - &PeerOrg
+        Name: PeerOrg
+        ID: PeerOrg
+        MSPDir: crypto-config/peerOrganizations/blockr/peers/vm1.blockr/msp
+        AdminPrincipal: Role.ADMIN
+        AnchorPeers:
+            - Host: ANCHOR_PEER_IP
+              Port: 7051
+Orderer: &OrdererDefaults
+    OrdererType: solo
+    Addresses:
+        - ORDERER_IP:7050
+    BatchTimeout: 1ms
+    BatchSize:
+        MaxMessageCount: 10
+        AbsoluteMaxBytes: 99 MB
+        PreferredMaxBytes: 512 KB
+    MaxChannels: 0
+    Kafka:
+        Brokers:
+            - 127.0.0.1:9092
+    Organizations:
+Application: &ApplicationDefaults
+    Organizations:
+

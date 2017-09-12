@@ -1,0 +1,15 @@
+# ---------------------------------------------------------------------------
+# Block R Network Configuration 
+# ---------------------------------------------------------------------------
+OrdererOrgs:
+  - Name: Org0
+    Domain: blockr 
+    Specs:
+        - Hostname: vm1
+PeerOrgs:
+  - Name: Org1
+    Domain: blockr 
+    Specs:
+        - Hostname: vm1
+    Users:
+      Count: 1
