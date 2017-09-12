@@ -13,7 +13,7 @@ This tool was created to help maintain the regional Block R processing nodes.  H
 
 - Local git repo of Hyperledger Fabric in `$GOPATH/src/github.com/hyperledger/fabric`
 - Empty physical servers/virtual machines to be used as a solo ordering service and peers
-- Tested with CENTOS 7, other distributions might also work
+- Tested with Centos 7, other distributions might also work
 - git client installed on the servers
 - Ability to do "sudo" without having to enter a password on the servers
 - Ability to ssh without having to enter a password from the machine that runs this script
