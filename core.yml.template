@@ -63,13 +63,13 @@ peer:
         enabled: WITH_TLS 
         cert:
 #            file: tls/server.crt
-            file: crypto-config/peerOrganizations/blockr/peers/vm1.blockr/tls/server.crt
+            file: PEER_MSP_ROOT/tls/server.crt
         key:
 #            file: tls/server.key
-            file: crypto-config/peerOrganizations/blockr/peers/vm1.blockr/tls/server.key
+            file: PEER_MSP_ROOT/tls/server.key
         rootcert:
 #            file: tls/ca.crt
-            file: crypto-config/peerOrganizations/blockr/peers/vm1.blockr/tls/ca.crt
+            file: PEER_MSP_ROOT/tls/ca.crt
         serverhostoverride:
     fileSystemPath: /var/hyperledger/production
     BCCSP:
@@ -79,7 +79,7 @@ peer:
             Security: 256
             FileKeyStore:
                 KeyStore:
-    mspConfigPath: crypto-config/peerOrganizations/blockr/peers/vm1.blockr/msp
+    mspConfigPath: PEER_MSP_ROOT/msp
 
     # Identifier of the local MSP
     # ----!!!!IMPORTANT!!!-!!!IMPORTANT!!!-!!!IMPORTANT!!!!----

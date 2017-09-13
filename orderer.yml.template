@@ -13,12 +13,12 @@ General:
     TLS:
         Enabled: WITH_TLS 
 #        PrivateKey: tls/server.key
-        PrivateKey: crypto-config/ordererOrganizations/blockr/orderers/vm1.blockr/tls/server.key
+        PrivateKey: ORDERER_MSP_ROOT/tls/server.key
 #        Certificate: tls/server.crt
-        Certificate: crypto-config/ordererOrganizations/blockr/orderers/vm1.blockr/tls/server.crt
+        Certificate: ORDERER_MSP_ROOT/tls/server.crt
         RootCAs:
 #          - tls/ca.crt
-          - crypto-config/ordererOrganizations/blockr/orderers/vm1.blockr/tls/ca.crt
+          - ORDERER_MSP_ROOT/tls/ca.crt
         ClientAuthEnabled: false
         ClientRootCAs:
     LogLevel: info
@@ -26,7 +26,7 @@ General:
     GenesisProfile: Genesis
     GenesisFile: genesis.block
 #    LocalMSPDir: crypto-config
-    LocalMSPDir: crypto-config/ordererOrganizations/blockr/orderers/vm1.blockr/msp
+    LocalMSPDir: ORDERER_MSP_ROOT/msp 
     LocalMSPID: OrdererOrg
     Profile:
         Enabled: false

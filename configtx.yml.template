@@ -26,12 +26,12 @@ Organizations:
     - &OrdererOrg
         Name: OrdererOrg
         ID: OrdererOrg
-        MSPDir: crypto-config/ordererOrganizations/blockr/orderers/vm1.blockr/msp
+        MSPDir: ORDERER_MSP_ROOT/msp 
         AdminPrincipal: Role.ADMIN
     - &PeerOrg
         Name: PeerOrg
         ID: PeerOrg
-        MSPDir: crypto-config/peerOrganizations/blockr/peers/vm1.blockr/msp
+        MSPDir: PEER_MSP_ROOT/msp 
         AdminPrincipal: Role.ADMIN
         AnchorPeers:
             - Host: ANCHOR_PEER_IP

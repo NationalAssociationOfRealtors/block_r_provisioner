@@ -1,5 +1,13 @@
 #!/bin/bash -e
 
+echo ".----------"
+echo "|"
+echo "|  Block R Network Provisoner"
+echo "|  Association Engagement Tracker"
+echo "|"
+echo "'----------"
+
+DEBUG=false
 FABRIC=$GOPATH/src/github.com/hyperledger/fabric
 WITH_TLS=true
 
@@ -35,7 +43,9 @@ query() {
   fi
   ssh_args='{"Args":["query","a"]}'
   SSH_CMD="${ROOT_TLS} CORE_PEER_MSPCONFIGPATH=${ADMIN_MSP} CORE_PEER_LOCALMSPID=PeerOrg CORE_PEER_ADDRESS=$1:7051 ./peer chaincode query -n exampleCC -v 1.0 -C blockr -c '${ssh_args}' ${ORDERER_TLS}"
-  echo $SSH_CMD
+  if [ "$DEBUG" = true ]; then
+    echo $SSH_CMD
+  fi
   eval "$SSH_CMD" 
 }
 
@@ -47,7 +57,9 @@ invoke() {
   fi
   ssh_args='{"Args":["invoke","a","b","10"]}'
   SSH_CMD="${ROOT_TLS} CORE_PEER_MSPCONFIGPATH=${ADMIN_MSP} CORE_PEER_LOCALMSPID=PeerOrg CORE_PEER_ADDRESS=$1:7051 ./peer chaincode invoke -n exampleCC -v 1.0 -C blockr -c '${ssh_args}' -o ${bootPeer}:7050 ${ORDERER_TLS}"
-  echo $SSH_CMD
+  if [ "$DEBUG" = true ]; then
+    echo $SSH_CMD
+  fi
   eval "$SSH_CMD" 
 }
 
@@ -57,6 +69,9 @@ invoke() {
 #
 # copy binaries into this local space
 #
+echo ".----------"
+echo "|  Copy binaries from Hyperledger FBRIC"
+echo "'----------"
 for file in configtxgen peer cryptogen; do
   [[ -f $file ]] && continue
   binary=$FABRIC/build/bin/$file
@@ -70,6 +85,9 @@ done
 #
 # read config and set variables
 #
+echo ".----------"
+echo "|  Read config.sh to determine which servers to provision"
+echo "'----------"
 . config.sh
 bootPeer=$(echo ${nodes} | awk '{print $1}')
 ADMIN_MSP=`pwd`/crypto-config/peerOrganizations/blockr/users/Admin@blockr/msp/
@@ -82,6 +100,9 @@ fi
 #
 # make sure fabric is installed on all servers
 #
+echo ".----------"
+echo "|  Ensure Hyperledger Fabric is installed on each node"
+echo "'----------"
 for p in $nodes; do
   if [ `probeFabric $p` == "1" ];then
     echo "Didn't detect fabric installation on $p, proceeding to install fabric on it"
@@ -92,7 +113,9 @@ done
 #
 # prepapre configuraton files
 #
-echo "Preparing configuration..."
+echo ".----------"
+echo "|  Create configuraton files for the network"
+echo "'----------"
 rm -rf crypto-config
 for p in $nodes ; do
   rm -rf $p
@@ -112,11 +135,13 @@ for p in $nodes ; do
   fi
   (( i += 1 ))
 
-  cat core.yml.template | sed "s/PROPAGATEPEERNUM/${PROPAGATEPEERNUM}/ ; s/PEERID/$p/ ; s/ADDRESS/$p/ ; s/ORGLEADER/$orgLeader/ ; s/BOOTSTRAP/$bootPeer:7051/ ; s/WITH_TLS/$WITH_TLS/ " > $p/sampleconfig/core.yaml
+  PEER_MSP_ROOT="crypto-config/peerOrganizations/blockr/peers/$p.blockr"
+  cat core.yml.template | sed "s|PROPAGATEPEERNUM|${PROPAGATEPEERNUM}| ; s|PEERID|$p| ; s|ADDRESS|$p| ; s|ORGLEADER|$orgLeader| ; s|BOOTSTRAP|$bootPeer:7051| ; s|WITH_TLS|$WITH_TLS| ; s|PEER_MSP_ROOT|$PEER_MSP_ROOT| " > $p/sampleconfig/core.yaml
 
-  cat orderer.yml.template | sed "s/WITH_TLS/$WITH_TLS/ " > $p/sampleconfig/orderer.yaml
+  ORDERER_MSP_ROOT="crypto-config/ordererOrganizations/blockr/orderers/$bootPeer.blockr"
+  cat orderer.yml.template | sed "s:WITH_TLS:$WITH_TLS: ; s:ORDERER_MSP_ROOT:$ORDERER_MSP_ROOT: " > $p/sampleconfig/orderer.yaml
 
-  cat configtx.yml.template | sed "s/ANCHOR_PEER_IP/$bootPeer/ ; s/ORDERER_IP/$p/" > configtx.yaml
+  cat configtx.yml.template | sed "s:ANCHOR_PEER_IP:$bootPeer: ; s:ORDERER_IP:$p: ; s:ORDERER_MSP_ROOT:$ORDERER_MSP_ROOT: ; s:PEER_MSP_ROOT:$PEER_MSP_ROOT: " > configtx.yaml
   cp configtx.yaml $p/sampleconfig/configtx.yaml
 
 done
@@ -154,16 +179,26 @@ EOF
 #
 # generate configuraton files
 #
-echo "Generating configuration..."
-
+echo ".----------"
+echo "|  Generate encryption keys"
+echo "'----------"
 ./cryptogen generate --config crypto-config.yaml
 
+echo ".----------"
+echo "|  Generate 'blockr' channel definition"
+echo "'----------"
 ./configtxgen -profile Channels -outputCreateChannelTx blockr.tx -channelID blockr 
 cp blockr.tx $bootPeer/sampleconfig/
 
+echo ".----------"
+echo "|  Create genesis block and load on the boot peer $bootPeer"
+echo "'----------"
 ./configtxgen -profile Genesis -outputBlock $bootPeer/sampleconfig/genesis.block -channelID system
 
 for p in $nodes ; do
+echo ".----------"
+echo "|  Prepare configuration for node $p"
+echo "'----------"
   cp -r crypto-config $p/sampleconfig
 #  cp -r crypto-config/peerOrganizations/blockr/peers/$p.blockr/msp/* $p/sampleconfig/crypto
 #  cp -r crypto-config/peerOrganizations/blockr/peers/$p.blockr/tls/* $p/sampleconfig/tls/
@@ -174,59 +209,49 @@ for p in $nodes ; do
 #  fi
 #    cp -r crypto-config/peerOrganizations/blockr/peers/$p.blockr/msp/* $orderer/sampleconfig/crypto
 #    cp -r crypto-config/peerOrganizations/blockr/peers/$p.blockr/tls/* $orderer/sampleconfig/tls
-done
 #cp -r crypto-config/ordererOrganizations/blockr/orderers/${orderer}.blockr/msp/* $orderer/sampleconfig/crypto
 #cp -r crypto-config/ordererOrganizations/blockr/orderers/${orderer}.blockr/msp/* $orderer/sampleconfig/crypto
 #cp -r crypto-config/ordererOrganizations/blockr/orderers/${orderer}.blockr/tls/* $orderer/sampleconfig/tls
 
-#
-# Deploy configuration
-#
-echo "Deploying configuration"
-
-for p in $nodes ; do
+echo ".----------"
+echo "|  Reset enviroment on $p"
+echo "'----------"
   ssh $p "pkill orderer; pkill peer" || echo ""
   ssh $p "rm -rf /var/hyperledger/production/*"
 #  SSH_CMD="cd $FABRIC; git reset HEAD --hard && git pull"
 #  ssh $p $SSH_CMD 
-  scp -r $p/sampleconfig/* $p:$FABRIC/sampleconfig/
-done
+  scp -rq $p/sampleconfig/* $p:$FABRIC/sampleconfig/
 
-echo "killing docker containers"
-for p in $nodes ; do
-  ssh $p "docker ps -aq | xargs docker kill &> /dev/null " || echo -n "."
-  ssh $p "docker ps -aq | xargs docker rm &> /dev/null " || echo -n "."
-  ssh $p "docker images | grep 'dev-' | awk '{print $3}' | xargs docker rmi &> /dev/null " || echo -n "."
-done
+echo ".----------"
+echo "|  Stop any running Docker containers on $p"
+echo "'----------"
+  ssh $p "docker ps -aq | xargs docker kill &> /dev/null || echo -n " 
+  ssh $p "docker ps -aq | xargs docker rm &> /dev/null || echo -n " 
+  ssh $p "docker images | grep 'dev-' | awk '{print $3}' | xargs docker rmi &> /dev/null || echo -n " 
 
-#echo "Installing orderer"
-#SSH_CMD="bash -c '. ~/.bash_profile; cd $FABRIC; make orderer && make peer'"
-#ssh $orderer $SSH_CMD 
-#for p in $peers ; do
-#  echo "Installing peer $p"
-#  SSH_CMD="bash -c '. ~/.bash_profile; cd $FABRIC; make peer' " 
-#  ssh $p $SSH_CMD 
-#done
+echo ".----------"
+echo "|  Start orderer on $p"
+echo "'----------"
+#  SSH_CMD=" . ~/.bash_profile; cd $FABRIC;  echo 'ORDERER_GENERAL_LOGLEVEL=debug ./build/bin/orderer &> orderer.out &' > start.sh; bash start.sh "
+  SSH_CMD=" . ~/.bash_profile; cd $FABRIC;  echo './build/bin/orderer &> orderer.out &' > start.sh; bash start.sh "
+  if [ "$DEBUG" = true ]; then
+    echo $SSH_CMD
+  fi
+  ssh $p $SSH_CMD 
 
-echo "Starting orderer on $bootPeer"
-#SSH_CMD=" . ~/.bash_profile; cd $FABRIC;  echo 'ORDERER_GENERAL_LOGLEVEL=debug ./build/bin/orderer &> orderer.out &' > start.sh; bash start.sh "
-SSH_CMD=" . ~/.bash_profile; cd $FABRIC;  echo './build/bin/orderer &> orderer.out &' > start.sh; bash start.sh "
-echo $SSH_CMD
-ssh $bootPeer $SSH_CMD 
-ORDERER_TLS=""
-if [ "$WITH_TLS" = true ]; then
-  orderer_cert=`pwd`/crypto-config/ordererOrganizations/blockr/orderers/${bootPeer}.blockr/tls/ca.crt
-  ORDERER_TLS="--tls true --cafile ${orderer_cert}"
-fi
-
-for p in $nodes ; do
-  echo "Starting peer on $p"
+echo ".----------"
+echo "|  Start peer on $p"
+echo "'----------"
   SSH_CMD=" . ~/.bash_profile; cd $FABRIC; echo './build/bin/peer node start &> $p.out &' > start.sh; bash start.sh "
-  echo $SSH_CMD
+  if [ "$DEBUG" = true ]; then
+    echo $SSH_CMD
+  fi
   ssh $p $SSH_CMD 
 done
 
-echo "waiting for orderer and peers to be online"
+echo ".----------"
+echo "|  Waiting for all nodes to start up"
+echo "'----------"
 while :; do
   allOnline=true
   for p in $nodes; do
@@ -246,49 +271,75 @@ sleep 20
 #
 # creating channel
 #
-echo "Creating channel"
+echo ".----------"
+echo "|  Creating a channel"
+echo "'----------"
+ORDERER_TLS=""
+if [ "$WITH_TLS" = true ]; then
+  orderer_cert=`pwd`/crypto-config/ordererOrganizations/blockr/orderers/${bootPeer}.blockr/tls/ca.crt
+  ORDERER_TLS="--tls true --cafile ${orderer_cert}"
+fi
 SSH_CMD="${ROOT_TLS} CORE_PEER_MSPCONFIGPATH=${ADMIN_MSP} CORE_PEER_LOCALMSPID=PeerOrg ./peer channel create -f blockr.tx  -c blockr -o ${bootPeer}:7050 ${ORDERER_TLS}"
-echo $SSH_CMD
+if [ "$DEBUG" = true ]; then
+  echo $SSH_CMD
+fi
 eval "$SSH_CMD"
 
 for p in $nodes ; do
-  echo -n "Joining $p to channel..."
+echo ".----------"
+echo "|  Joining peer $p to the channel"
+echo "'----------"
   SSH_CMD="${ROOT_TLS} CORE_PEER_MSPCONFIGPATH=${ADMIN_MSP} CORE_PEER_LOCALMSPID=PeerOrg CORE_PEER_ADDRESS=${p}:7051 ./peer channel join -b blockr.block"
-  echo $SSH_CMD
+  if [ "$DEBUG" = true ]; then
+    echo $SSH_CMD
+  fi
   eval "$SSH_CMD"
 
-  echo -n "Installing chaincode on $p..."
+echo ".----------"
+echo "|  Install chaincode into peer on $p"
+echo "'----------"
   SSH_CMD="${ROOT_TLS} CORE_PEER_MSPCONFIGPATH=${ADMIN_MSP} CORE_PEER_LOCALMSPID=PeerOrg CORE_PEER_ADDRESS=${p}:7051 ./peer chaincode install -p github.com/hyperledger/fabric/examples/chaincode/go/chaincode_example02 -n exampleCC -v 1.0"
-  echo $SSH_CMD
+  if [ "$DEBUG" = true ]; then
+    echo $SSH_CMD
+  fi
   eval "$SSH_CMD"
 done
 
-echo "Instantiating chaincode..."
+echo ".----------"
+echo "|  Instantiate chaincode from one node (using the bootPeer $bootPeer)"
+echo "'----------"
 ssh_args='{"Args":["init","a","100","b","200"]}'
 SSH_CMD="${ROOT_TLS} CORE_PEER_MSPCONFIGPATH=${ADMIN_MSP} CORE_PEER_LOCALMSPID=PeerOrg CORE_PEER_ADDRESS=${bootPeer}:7051 ./peer chaincode instantiate -n exampleCC -v 1.0 -C blockr -c '${ssh_args}' -o ${bootPeer}:7050 ${ORDERER_TLS}"
-echo $SSH_CMD
+if [ "$DEBUG" = true ]; then
+  echo $SSH_CMD
+fi
 eval "$SSH_CMD" 
 
 sleep 10
 
-echo "Invoking chaincode..."
 for p in $nodes ; do
+echo ".----------"
+echo "|  Querying chaincode on node $p"
+echo "'----------"
   query $p
 done
 
-exit 1
-
+echo ".----------"
+echo "|  Invoking chaincode five times"
+echo "'----------"
 for i in `seq 5`; do
   invoke ${bootPeer}
 done
 
-echo "Waiting for peers $nodes to sync..."
+echo ".----------"
+echo "|  Waiting for nodes to synchronize"
+echo "'----------"
 t1=`date +%s`
 while :; do
   allInSync=true
   for p in $nodes ; do
     echo "Querying $p..."
-    query $p | grep -q 'Query Result: 60'
+    query $p | grep -q 'Query Result: 50'
     if [[ $? -ne 0 ]];then
       allInSync=false
     fi
