@@ -42,10 +42,8 @@ query() {
   NODE_ROOT_TLS=""
   ORDERER_TLS=""
   if [ "$WITH_TLS" = true ]; then
-    root_cert=$FABRIC/$CONFIG_DIR/peerOrganizations/blockr/peers/$1.blockr/tls/ca.crt
-    NODE_ROOT_TLS="CORE_PEER_TLS_ROOTCERT_FILE=${root_cert}"
-    orderer_cert=$FABRIC/$CONFIG_DIR/ordererOrganizations/blockr/orderers/$1.blockr/tls/ca.crt
-    ORDERER_TLS="--tls true --cafile ${orderer_cert}"
+    NODE_ROOT_TLS="CORE_PEER_TLS_ROOTCERT_FILE=$FABRIC/$CONFIG_DIR/peerOrganizations/blockr/peers/$1.blockr/tls/ca.crt"
+    ORDERER_TLS="--tls true --cafile $FABRIC/$CONFIG_DIR/ordererOrganizations/blockr/orderers/$1.blockr/tls/ca.crt"
   fi
   ssh_args='{"Args":["query","a"]}'
   SSH_CMD="$NODE_ROOT_TLS FABRIC_CFG_PATH=$FABRIC/$CONFIG_DIR CORE_PEER_MSPCONFIGPATH=$NODE_ADMIN_MSP CORE_PEER_LOCALMSPID=PeerOrg CORE_PEER_ADDRESS=$1:7051 $FABRIC/build/bin/peer chaincode query -n exampleCC -v 1.0 -C blockr -c '$ssh_args' $ORDERER_TLS"
@@ -59,10 +57,8 @@ invoke() {
   NODE_ROOT_TLS=""
   ORDERER_TLS=""
   if [ "$WITH_TLS" = true ]; then
-    root_cert=$FABRIC/$CONFIG_DIR/peerOrganizations/blockr/peers/$1.blockr/tls/ca.crt
-    NODE_ROOT_TLS="CORE_PEER_TLS_ROOTCERT_FILE=${root_cert}"
-    orderer_cert=$FABRIC/$CONFIG_DIR/ordererOrganizations/blockr/orderers/$1.blockr/tls/ca.crt
-    ORDERER_TLS="--tls true --cafile ${orderer_cert}"
+    NODE_ROOT_TLS="CORE_PEER_TLS_ROOTCERT_FILE=$FABRIC/$CONFIG_DIR/peerOrganizations/blockr/peers/$1.blockr/tls/ca.crt"
+    ORDERER_TLS="--tls true --cafile $FABRIC/$CONFIG_DIR/ordererOrganizations/blockr/orderers/$1.blockr/tls/ca.crt"
   fi
   ssh_args='{"Args":["invoke","a","b","10"]}'
   SSH_CMD="$NODE_ROOT_TLS FABRIC_CFG_PATH=$FABRIC/$CONFIG_DIR CORE_PEER_MSPCONFIGPATH=$NODE_ADMIN_MSP CORE_PEER_LOCALMSPID=PeerOrg CORE_PEER_ADDRESS=$1:7051 $FABRIC/build/bin/peer chaincode invoke -n exampleCC -v 1.0 -C blockr -c '$ssh_args' -o $1:7050 $ORDERER_TLS"
@@ -249,11 +245,10 @@ sleep $SYNC_WAIT
 BOOT_NODE_ROOT_TLS=""
 BOOT_ORDERER_TLS=""
 if [ "$WITH_TLS" = true ]; then
-  root_cert=$FABRIC/$CONFIG_DIR/peerOrganizations/blockr/peers/$bootPeer.blockr/tls/ca.crt
-  BOOT_NODE_ROOT_TLS="CORE_PEER_TLS_ROOTCERT_FILE=${root_cert}"
-  orderer_cert=$FABRIC/$CONFIG_DIR/ordererOrganizations/blockr/orderers/$bootPeer.blockr/tls/ca.crt
-  BOOT_ORDERER_TLS="--tls true --cafile ${orderer_cert}"
+  BOOT_NODE_ROOT_TLS="CORE_PEER_TLS_ROOTCERT_FILE=$FABRIC/$CONFIG_DIR/peerOrganizations/blockr/peers/$bootPeer.blockr/tls/ca.crt"
+  BOOT_ORDERER_TLS="--tls true --cafile $FABRIC/$CONFIG_DIR/ordererOrganizations/blockr/orderers/$bootPeer.blockr/tls/ca.crt"
 fi
+
 echo ".----------"
 echo "|  Creating a channel from one node (using the bootPeer $bootPeer)"
 echo "'----------"
@@ -267,10 +262,8 @@ for p in $nodes ; do
   NODE_ROOT_TLS=""
   ORDERER_TLS=""
   if [ "$WITH_TLS" = true ]; then
-    root_cert=$FABRIC/$CONFIG_DIR/peerOrganizations/blockr/peers/$p.blockr/tls/ca.crt
-    NODE_ROOT_TLS="CORE_PEER_TLS_ROOTCERT_FILE=${root_cert}"
-    orderer_cert=$FABRIC/$CONFIG_DIR/ordererOrganizations/blockr/orderers/$p.blockr/tls/ca.crt
-    ORDERER_TLS="--tls true --cafile ${orderer_cert}"
+    NODE_ROOT_TLS="CORE_PEER_TLS_ROOTCERT_FILE=$FABRIC/$CONFIG_DIR/peerOrganizations/blockr/peers/$p.blockr/tls/ca.crt"
+    ORDERER_TLS="--tls true --cafile $FABRIC/$CONFIG_DIR/ordererOrganizations/blockr/orderers/$p.blockr/tls/ca.crt"
   fi
 echo ".----------"
 echo "|  Joining peer $p to the channel"
