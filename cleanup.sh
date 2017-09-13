@@ -33,9 +33,6 @@ EOF
 #
 cd $LOCAL_DIR
 echo "Cleaning up artifacts in the directory {$LOCAL_DIR}"
-deleteFile ./configtxgen 
-deleteFile ./cryptogen 
-deleteFile ./peer 
 deleteFile ./*.tx 
 deleteFile ./*.yaml 
 deleteFile ./*.block
