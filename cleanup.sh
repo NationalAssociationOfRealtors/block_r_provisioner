@@ -1,7 +1,8 @@
 #!/bin/bash
 
-PRODUCTION_DIR=/var/hyperledger
+CONFIG_DIR="blockr_config"
 LOCAL_DIR=`pwd`
+PRODUCTION_DIR=/var/hyperledger
 
 deleteFile() {
   if [ -f $1 ]; then
@@ -38,7 +39,7 @@ deleteFile ./peer
 deleteFile ./*.tx 
 deleteFile ./*.yaml 
 deleteFile ./*.block
-rm -rf crypto-config
+rm -rf $CONFIG_DIR 
 . config.sh
 for p in $nodes ; do
   rm -rf $p

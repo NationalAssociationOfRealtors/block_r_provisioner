@@ -62,13 +62,10 @@ peer:
     tls:
         enabled: WITH_TLS 
         cert:
-#            file: tls/server.crt
             file: PEER_MSP_ROOT/tls/server.crt
         key:
-#            file: tls/server.key
             file: PEER_MSP_ROOT/tls/server.key
         rootcert:
-#            file: tls/ca.crt
             file: PEER_MSP_ROOT/tls/ca.crt
         serverhostoverride:
     fileSystemPath: /var/hyperledger/production
