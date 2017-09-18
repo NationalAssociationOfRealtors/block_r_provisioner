@@ -1,5 +1,7 @@
 #!/bin/bash
 
+CONFIG_DIR="blockr_config"
+FABRIC=$GOPATH/src/github.com/hyperledger/fabric
 PRODUCTION_DIR=/var/hyperledger
 
 #
@@ -18,6 +20,7 @@ sudo su - $(whoami) - << EOF
   fi
   echo "Creating Production directory $PRODUCTION_DIR"
   sudo mkdir -p $PRODUCTION_DIR 
+  mkdir -p $FABRIC/$CONFIG_DIR
   sudo chown $(whoami):$(whoami) $PRODUCTION_DIR 
   sudo /etc/init.d/couchdb start
 EOF

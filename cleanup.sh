@@ -33,9 +33,6 @@ EOF
 #
 cd $LOCAL_DIR
 echo "Cleaning up artifacts in the directory {$LOCAL_DIR}"
-deleteFile ./*.tx 
-deleteFile ./*.yaml 
-deleteFile ./*.block
 rm -rf $CONFIG_DIR 
 . config.sh
 for p in $nodes ; do
