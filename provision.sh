@@ -11,11 +11,28 @@ CONFIG_DIR=blockr_config
 DEBUG=true
 FABRIC=$GOPATH/src/github.com/hyperledger/fabric
 GOPATH=/work/projects/go
+PRODUCTION_DIR=/var/hyperledger
 SYNC_WAIT=5
 WITH_TLS=true
 
+deployFabric() {
+  sendLocal "scp install.sh $1:install.sh"
+  sendSSH $1 "bash install.sh"
+}
+
 getIP() {
   ssh $1 "/usr/sbin/ip addr | grep 'inet .*global' | cut -f 6 -d ' ' | cut -f1 -d '/' | head -n 1"
+}
+
+invoke() {
+  NODE_ROOT_TLS=""
+  ORDERER_TLS=""
+  if [ "$WITH_TLS" = true ]; then
+    NODE_ROOT_TLS="CORE_PEER_TLS_ROOTCERT_FILE=$FABRIC/$CONFIG_DIR/peerOrganizations/blockr/peers/$1.blockr/tls/ca.crt"
+    ORDERER_TLS="--tls true --cafile $FABRIC/$CONFIG_DIR/ordererOrganizations/blockr/orderers/$1.blockr/tls/ca.crt"
+  fi
+  ssh_args='{"Args":["invoke","a","b","10"]}'
+  sendSSH $1 "$NODE_ROOT_TLS FABRIC_CFG_PATH=$FABRIC/$CONFIG_DIR CORE_PEER_MSPCONFIGPATH=$NODE_ADMIN_MSP CORE_PEER_LOCALMSPID=PeerOrg CORE_PEER_ADDRESS=$1:7051 $FABRIC/build/bin/peer chaincode invoke -n exampleCC -v 1.0 -C blockr -c '$ssh_args' -o $1:7050 $ORDERER_TLS"
 }
 
 probePeerOrOrderer() {
@@ -33,11 +50,6 @@ probeFabric() {
   echo "0"
 }
 
-deployFabric() {
-  scp install.sh $1:install.sh
-  ssh $1 "bash install.sh"
-}
-
 query() {
   NODE_ROOT_TLS=""
   ORDERER_TLS=""
@@ -46,26 +58,28 @@ query() {
     ORDERER_TLS="--tls true --cafile $FABRIC/$CONFIG_DIR/ordererOrganizations/blockr/orderers/$1.blockr/tls/ca.crt"
   fi
   ssh_args='{"Args":["query","a"]}'
-  SSH_CMD="$NODE_ROOT_TLS FABRIC_CFG_PATH=$FABRIC/$CONFIG_DIR CORE_PEER_MSPCONFIGPATH=$NODE_ADMIN_MSP CORE_PEER_LOCALMSPID=PeerOrg CORE_PEER_ADDRESS=$1:7051 $FABRIC/build/bin/peer chaincode query -n exampleCC -v 1.0 -C blockr -c '$ssh_args' $ORDERER_TLS"
-  if [ "$DEBUG" = true ]; then
-    echo $SSH_CMD
-  fi
-  ssh $1 $SSH_CMD
+  sendSSH $1 "$NODE_ROOT_TLS FABRIC_CFG_PATH=$FABRIC/$CONFIG_DIR CORE_PEER_MSPCONFIGPATH=$NODE_ADMIN_MSP CORE_PEER_LOCALMSPID=PeerOrg CORE_PEER_ADDRESS=$1:7051 $FABRIC/build/bin/peer chaincode query -n exampleCC -v 1.0 -C blockr -c '$ssh_args' $ORDERER_TLS"
 }
 
-invoke() {
-  NODE_ROOT_TLS=""
-  ORDERER_TLS=""
-  if [ "$WITH_TLS" = true ]; then
-    NODE_ROOT_TLS="CORE_PEER_TLS_ROOTCERT_FILE=$FABRIC/$CONFIG_DIR/peerOrganizations/blockr/peers/$1.blockr/tls/ca.crt"
-    ORDERER_TLS="--tls true --cafile $FABRIC/$CONFIG_DIR/ordererOrganizations/blockr/orderers/$1.blockr/tls/ca.crt"
-  fi
-  ssh_args='{"Args":["invoke","a","b","10"]}'
-  SSH_CMD="$NODE_ROOT_TLS FABRIC_CFG_PATH=$FABRIC/$CONFIG_DIR CORE_PEER_MSPCONFIGPATH=$NODE_ADMIN_MSP CORE_PEER_LOCALMSPID=PeerOrg CORE_PEER_ADDRESS=$1:7051 $FABRIC/build/bin/peer chaincode invoke -n exampleCC -v 1.0 -C blockr -c '$ssh_args' -o $1:7050 $ORDERER_TLS"
+sendLocal() {
   if [ "$DEBUG" = true ]; then
-    echo $SSH_CMD
+    echo "==> $1"
   fi
-  ssh $1 $SSH_CMD
+  eval $1
+}
+
+sendSSH() {
+  if [ "$DEBUG" = true ]; then
+    echo "==> $2"
+  fi
+  ssh $1 $2
+}
+
+userFeedback() {
+echo ""
+echo ".----------"
+echo "|  $1"
+echo "'----------"
 }
 
 [[ -z $GOPATH ]] && (echo "Environment variable GOPATH isn't set!"; exit 1)
@@ -74,9 +88,7 @@ invoke() {
 #
 # read config and set variables
 #
-echo ".----------"
-echo "|  Read config.sh to determine which servers to provision"
-echo "'----------"
+userFeedback "Read config.sh to determine which servers to provision"
 . config.sh
 bootPeer=$(echo ${nodes} | awk '{print $1}')
 NODE_ADMIN_MSP=$FABRIC/$CONFIG_DIR/peerOrganizations/blockr/users/Admin@blockr/msp/
@@ -84,9 +96,7 @@ NODE_ADMIN_MSP=$FABRIC/$CONFIG_DIR/peerOrganizations/blockr/users/Admin@blockr/m
 #
 # make sure fabric is installed on all servers
 #
-echo ".----------"
-echo "|  Ensure Hyperledger Fabric is installed on each node"
-echo "'----------"
+userFeedback "Ensure Hyperledger Fabric is installed on each node"
 for p in $nodes; do
   if [ `probeFabric $p` == "1" ];then
     echo "Didn't detect fabric installation on $p, proceeding to install fabric on it"
@@ -95,14 +105,12 @@ for p in $nodes; do
 done
 
 #
-# prepapre configuraton files
+# prepare configuraton files
 #
-echo ".----------"
-echo "|  Create configuraton files for the network"
-echo "'----------"
-rm -rf $CONFIG_DIR 
+userFeedback "Create configuraton files for the network"
+sendLocal "rm -rf $CONFIG_DIR" 
 for p in $nodes ; do
-  rm -rf $p
+  sendLocal "rm -rf $p"
 done
 
 PROPAGATEPEERNUM=${PROPAGATEPEERNUM:-3}
@@ -133,7 +141,7 @@ fi
 cat << EOF >> blockr-config.yaml
 ################################################################################
 #
-#  Block R Network Configuration 
+#  Block R Network Configuration generated from config.sh 
 #
 ################################################################################
 OrdererOrgs:
@@ -159,70 +167,53 @@ cat << EOF >> blockr-config.yaml
       Count: 1
 EOF
 
-#
-# generate configuraton files
-#
-echo ".----------"
-echo "|  Generate encryption keys"
-echo "'----------"
-$FABRIC/build/bin/cryptogen generate --config blockr-config.yaml --output $CONFIG_DIR
-mv configtx.yaml $CONFIG_DIR
-mv blockr-config.yaml $CONFIG_DIR
+sendLocal "cat blockr-config.yaml"
 
-echo ".----------"
-echo "|  Generate 'blockr' channel definition"
-echo "'----------"
-FABRIC_CFG_PATH=./$CONFIG_DIR $FABRIC/build/bin/configtxgen -profile Channels -outputCreateChannelTx $CONFIG_DIR/blockr.tx -channelID blockr 
+#
+# generate configuraton
+#
+userFeedback "Generate encryption keys"
+sendLocal "$FABRIC/build/bin/cryptogen generate --config blockr-config.yaml --output $CONFIG_DIR"
+sendLocal "mv configtx.yaml $CONFIG_DIR; mv blockr-config.yaml $CONFIG_DIR"
 
-echo ".----------"
-echo "|  Create genesis block"
-echo "'----------"
-FABRIC_CFG_PATH=./$CONFIG_DIR $FABRIC/build/bin/configtxgen -profile Genesis -outputBlock $CONFIG_DIR/genesis.block -channelID system
+userFeedback "Generate 'blockr' channel definition"
+sendLocal "FABRIC_CFG_PATH=./$CONFIG_DIR $FABRIC/build/bin/configtxgen -profile Channels -outputCreateChannelTx $CONFIG_DIR/blockr.tx -channelID blockr" 
+
+userFeedback "Create genesis block"
+sendLocal "FABRIC_CFG_PATH=./$CONFIG_DIR $FABRIC/build/bin/configtxgen -profile Genesis -outputBlock $CONFIG_DIR/genesis.block -channelID system"
 
 for p in $nodes ; do
-echo ".----------"
-echo "|  Prepare configuration for node $p"
-echo "'----------"
-  cp -r $CONFIG_DIR $p
+  userFeedback "Reset enviroment on $p"
+  echo "Stop peer and orderer daemons"
+  sendSSH $p "pkill orderer; pkill peer" || echo -n ""
 
-echo ".----------"
-echo "|  Reset enviroment on $p"
-echo "'----------"
-  ssh $p "pkill orderer; pkill peer" || echo ""
-  ssh $p "rm -rf /var/hyperledger/production/*"
+  if [ -d $PRODUCTION_DIR ]; then
+    echo "Removing production directories under $PRODUCTION_DIR"
+    sendSSH $p "rm -rf $PRODUCTION_DIR/production/*"
+  else
+    echo "Creating production directory $PRODUCTION_DIR"
+    sendSSH $p "sudo mkdir -p $PRODUCTION_DIR; sudo chown $(whoami):$(whoami) $PRODUCTION_DIR; mkdir -p $PRODUCTION_DIR/production; chown $(whoami):$(whoami) $PRODUCTION_DIR/production" 
+  fi
+
 #  SSH_CMD="cd $FABRIC; git reset HEAD --hard && git pull"
-#  ssh $p $SSH_CMD 
-  scp -rq $p/$CONFIG_DIR/* $p:$FABRIC/$CONFIG_DIR
 
-echo ".----------"
-echo "|  Stop any running Docker containers on $p"
-echo "'----------"
-  ssh $p "docker ps -aq | xargs docker kill &> /dev/null || echo -n " 
-  ssh $p "docker ps -aq | xargs docker rm &> /dev/null || echo -n " 
-  ssh $p "docker images | grep 'dev-' | awk '{print $3}' | xargs docker rmi &> /dev/null || echo -n " 
+  userFeedback "Deploy configuration $CONFOG_DIR on node $p"
+  sendLocal "cp -r $CONFIG_DIR $p; scp -rq $p/$CONFIG_DIR/* $p:$FABRIC/$CONFIG_DIR"
 
-echo ".----------"
-echo "|  Start orderer on $p"
-echo "'----------"
-  SSH_CMD="echo 'FABRIC_CFG_PATH=$FABRIC/$CONFIG_DIR $FABRIC/build/bin/orderer &> $FABRIC/orderer.out &' > start.sh; bash start.sh "
-  if [ "$DEBUG" = true ]; then
-    echo $SSH_CMD
-  fi
-  ssh $p $SSH_CMD 
+  userFeedback "Stop any running Docker containers on $p"
+  sendSSH $p "docker ps -aq | xargs docker kill &> /dev/null" || echo -n "" 
+  sendSSH $p "docker ps -aq | xargs docker rm &> /dev/null" || echo -n "" 
+  sendSSH $p "docker images | grep 'dev-' | awk '{print $3}' | xargs docker rmi &> /dev/null" || echo -n "" 
 
-echo ".----------"
-echo "|  Start peer on $p"
-echo "'----------"
-  SSH_CMD="echo 'FABRIC_CFG_PATH=$FABRIC/$CONFIG_DIR $FABRIC/build/bin/peer node start &> $FABRIC/$p.out &' > start.sh; bash start.sh "
-  if [ "$DEBUG" = true ]; then
-    echo $SSH_CMD
-  fi
-  ssh $p $SSH_CMD 
+  userFeedback "Start orderer on $p"
+  sendSSH $p "echo 'FABRIC_CFG_PATH=$FABRIC/$CONFIG_DIR $FABRIC/build/bin/orderer &> $FABRIC/orderer.out &' > start.sh; bash start.sh "
+
+  userFeedback "Start peer on $p"
+  sendSSH $p "echo 'FABRIC_CFG_PATH=$FABRIC/$CONFIG_DIR $FABRIC/build/bin/peer node start &> $FABRIC/$p.out &' > start.sh; bash start.sh "
+
 done
 
-echo ".----------"
-echo "|  Waiting for all nodes to start up"
-echo "'----------"
+userFeedback "Waiting for all nodes to start up"
 while :; do
   allOnline=true
   for p in $nodes; do
@@ -249,14 +240,8 @@ if [ "$WITH_TLS" = true ]; then
   BOOT_ORDERER_TLS="--tls true --cafile $FABRIC/$CONFIG_DIR/ordererOrganizations/blockr/orderers/$bootPeer.blockr/tls/ca.crt"
 fi
 
-echo ".----------"
-echo "|  Creating a channel from one node (using the bootPeer $bootPeer)"
-echo "'----------"
-SSH_CMD="$BOOT_NODE_ROOT_TLS FABRIC_CFG_PATH=$FABRIC/$CONFIG_DIR CORE_PEER_MSPCONFIGPATH=$NODE_ADMIN_MSP CORE_PEER_LOCALMSPID=PeerOrg $FABRIC/build/bin/peer channel create -f $FABRIC/$CONFIG_DIR/blockr.tx  -c blockr -o $bootPeer:7050 $BOOT_ORDERER_TLS"
-if [ "$DEBUG" = true ]; then
-  echo $SSH_CMD
-fi
-ssh $bootPeer $SSH_CMD
+userFeedback "Creating a channel from one node (using the bootPeer $bootPeer)"
+sendSSH $bootPeer "$BOOT_NODE_ROOT_TLS FABRIC_CFG_PATH=$FABRIC/$CONFIG_DIR CORE_PEER_MSPCONFIGPATH=$NODE_ADMIN_MSP CORE_PEER_LOCALMSPID=PeerOrg $FABRIC/build/bin/peer channel create -f $FABRIC/$CONFIG_DIR/blockr.tx  -c blockr -o $bootPeer:7050 $BOOT_ORDERER_TLS"
 
 for p in $nodes ; do
   NODE_ROOT_TLS=""
@@ -265,68 +250,45 @@ for p in $nodes ; do
     NODE_ROOT_TLS="CORE_PEER_TLS_ROOTCERT_FILE=$FABRIC/$CONFIG_DIR/peerOrganizations/blockr/peers/$p.blockr/tls/ca.crt"
     ORDERER_TLS="--tls true --cafile $FABRIC/$CONFIG_DIR/ordererOrganizations/blockr/orderers/$p.blockr/tls/ca.crt"
   fi
-echo ".----------"
-echo "|  Joining peer $p to the channel"
-echo "'----------"
-  SSH_CMD="$NODE_ROOT_TLS FABRIC_CFG_PATH=$FABRIC/$CONFIG_DIR  CORE_PEER_MSPCONFIGPATH=$NODE_ADMIN_MSP CORE_PEER_LOCALMSPID=PeerOrg CORE_PEER_ADDRESS=$p:7051 $FABRIC/build/bin/peer channel join -b blockr.block"
-  if [ "$DEBUG" = true ]; then
-    echo $SSH_CMD
-  fi
-  ssh $p $SSH_CMD
+  userFeedback "Joining peer $p to the channel"
+  sendSSH $p "$NODE_ROOT_TLS FABRIC_CFG_PATH=$FABRIC/$CONFIG_DIR  CORE_PEER_MSPCONFIGPATH=$NODE_ADMIN_MSP CORE_PEER_LOCALMSPID=PeerOrg CORE_PEER_ADDRESS=$p:7051 $FABRIC/build/bin/peer channel join -b blockr.block"
 
-echo ".----------"
-echo "|  Install chaincode into peer on $p"
-echo "'----------"
-  SSH_CMD="$NODE_ROOT_TLS FABRIC_CFG_PATH=$FABRIC/$CONFIG_DIR  CORE_PEER_MSPCONFIGPATH=$NODE_ADMIN_MSP CORE_PEER_LOCALMSPID=PeerOrg CORE_PEER_ADDRESS=$p:7051 GOPATH=$GOPATH $FABRIC/build/bin/peer chaincode install -p github.com/hyperledger/fabric/examples/chaincode/go/chaincode_example02 -n exampleCC -v 1.0"
-  if [ "$DEBUG" = true ]; then
-    echo $SSH_CMD
-  fi
-  ssh $p $SSH_CMD
+  userFeedback "Install chaincode into peer on $p"
+  sendSSH $p "$NODE_ROOT_TLS FABRIC_CFG_PATH=$FABRIC/$CONFIG_DIR  CORE_PEER_MSPCONFIGPATH=$NODE_ADMIN_MSP CORE_PEER_LOCALMSPID=PeerOrg CORE_PEER_ADDRESS=$p:7051 GOPATH=$GOPATH $FABRIC/build/bin/peer chaincode install -p github.com/hyperledger/fabric/examples/chaincode/go/chaincode_example02 -n exampleCC -v 1.0"
+
 done
 
-echo ".----------"
-echo "|  Instantiate chaincode from one node (using the bootPeer $bootPeer)"
-echo "'----------"
+userFeedback "Instantiate chaincode from one node (using the bootPeer $bootPeer)"
+t1=`date +%s`
 ssh_args='{"Args":["init","a","100","b","200"]}'
-SSH_CMD="$BOOT_NODE_ROOT_TLS FABRIC_CFG_PATH=$FABRIC/$CONFIG_DIR CORE_PEER_MSPCONFIGPATH=$NODE_ADMIN_MSP CORE_PEER_LOCALMSPID=PeerOrg CORE_PEER_ADDRESS=$bootPeer:7051 $FABRIC/build/bin/peer chaincode instantiate -n exampleCC -v 1.0 -C blockr -c '${ssh_args}' -o $bootPeer:7050 $BOOT_ORDERER_TLS"
-if [ "$DEBUG" = true ]; then
-  echo $SSH_CMD
-fi
-ssh $bootPeer $SSH_CMD
-
-echo ".----------"
-echo "|  Waiting for nodes to synchronize"
-echo "'----------"
+sendSSH $bootPeer "$BOOT_NODE_ROOT_TLS FABRIC_CFG_PATH=$FABRIC/$CONFIG_DIR CORE_PEER_MSPCONFIGPATH=$NODE_ADMIN_MSP CORE_PEER_LOCALMSPID=PeerOrg CORE_PEER_ADDRESS=$bootPeer:7051 $FABRIC/build/bin/peer chaincode instantiate -n exampleCC -v 1.0 -C blockr -c '${ssh_args}' -o $bootPeer:7050 $BOOT_ORDERER_TLS"
+echo ".=========="
+echo "|  Commit took $(( $(date +%s) - $t1 ))s"
+echo "'=========="
 
 for p in $nodes ; do
-echo ".----------"
-echo "|  Querying chaincode on node $p"
-echo "'----------"
+  userFeedback "Querying chaincode on node $p"
   query $p
 done
 
-echo ".----------"
-echo "|  Invoking chaincode five times"
-echo "'----------"
+userFeedback "Invoking chaincode five times"
 for i in `seq 5`; do
   invoke $bootPeer
 done
 
-echo ".----------"
-echo "|  Waiting for nodes to synchronize"
-echo "'----------"
+userFeedback "Waiting for nodes to synchronize"
 t1=`date +%s`
 while :; do
   allInSync=true
   for p in $nodes ; do
-    echo "Querying $p..."
+#    echo "Querying $p..."
     query $p | grep -q 'Query Result: 50'
     if [[ $? -ne 0 ]];then
       allInSync=false
     fi
   done
   if [ "${allInSync}" == "true" ];then
-    echo Sync took $(( $(date +%s) - $t1 ))s
+    echo "Sync took $(( $(date +%s) - $t1 ))s"
     break
   fi
 done
