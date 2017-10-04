@@ -11,19 +11,19 @@ General:
     ListenAddress: 0.0.0.0
     ListenPort: 7050
     TLS:
-        Enabled: WITH_TLS 
-        PrivateKey: ORDERER_MSP_ROOT/tls/server.key
-        Certificate: ORDERER_MSP_ROOT/tls/server.crt
+        Enabled: false 
+        PrivateKey: ordererOrganizations/blockr/orderers/vm1.blockr/tls/server.key
+        Certificate: ordererOrganizations/blockr/orderers/vm1.blockr/tls/server.crt
         RootCAs:
-          - ORDERER_MSP_ROOT/tls/ca.crt
+          - ordererOrganizations/blockr/orderers/vm1.blockr/tls/ca.crt
         ClientAuthEnabled: false
         ClientRootCAs:
-    LogLevel: info
+    LogLevel: debug 
     GenesisMethod: file
     GenesisProfile: Genesis
     GenesisFile: genesis.block
-    LocalMSPDir: ORDERER_MSP_ROOT/msp 
-    LocalMSPID: OrdererOrg
+    LocalMSPDir:
+    LocalMSPID:
     Profile:
         Enabled: false
         Address: 0.0.0.0:6060
@@ -41,30 +41,3 @@ FileLedger:
     Prefix: hyperledger-fabric-ordererledger
 RAMLedger:
     HistorySize: 1000
-Kafka:
-    Retry:
-        ShortInterval: 5s
-        ShortTotal: 10m
-        LongInterval: 5m
-        LongTotal: 12h
-        NetworkTimeouts:
-            DialTimeout: 10s
-            ReadTimeout: 10s
-            WriteTimeout: 10s
-        Metadata:
-            RetryBackoff: 250ms
-            RetryMax: 3
-        Producer:
-            RetryBackoff: 100ms
-            RetryMax: 3
-        Consumer:
-            RetryBackoff: 2s
-    Verbose: false
-    TLS:
-      Enabled: false
-      PrivateKey:
-        #File: path/to/PrivateKey
-      Certificate:
-        #File: path/to/Certificate
-      RootCAs:
-        #File: path/to/RootCAs

@@ -1,0 +1,28 @@
+################################################################################
+#
+#  Block R Network Configuration generated from config.sh 
+#
+################################################################################
+OrdererOrgs:
+  - Name: Orderer1MSP
+    Domain: nar.blockr 
+    Specs:
+        - Hostname: vm1
+  - Name: Orderer2MSP
+    Domain: car.blockr 
+    Specs:
+        - Hostname: vm2
+PeerOrgs:
+  - Name: Org1MSP
+    Domain: nar.blockr 
+    Users:
+      Count: 1
+    Specs:
+        - Hostname: vm1
+  - Name: Org2MSP
+    Domain: car.blockr 
+    Users:
+      Count: 1
+    Specs:
+        - Hostname: vm2
+

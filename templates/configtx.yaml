@@ -11,35 +11,52 @@ Profiles:
         Orderer:
             <<: *OrdererDefaults
             Organizations:
-                - *OrdererOrg
+                - *OrdererOrg1
+                - *OrdererOrg2
         Consortiums:
              RealtorAssociations:
                 Organizations:
-                - *PeerOrg
+                - *Org1
+                - *Org2
     Channels:
         Consortium: RealtorAssociations 
         Application:
             <<: *ApplicationDefaults
             Organizations:
-                - *PeerOrg
+                - *Org1
+                - *Org2
 Organizations:
-    - &OrdererOrg
-        Name: OrdererOrg
-        ID: OrdererOrg
-        MSPDir: ORDERER_MSP_ROOT/msp 
+    - &OrdererOrg1
+        Name: Orderer1MSP
+        ID: Orderer1MSP
         AdminPrincipal: Role.ADMIN
-    - &PeerOrg
-        Name: PeerOrg
-        ID: PeerOrg
-        MSPDir: PEER_MSP_ROOT/msp 
+        MSPDir: ordererOrganizations/nar.blockr/msp 
+    - &OrdererOrg2
+        Name: Orderer2MSP
+        ID: Orderer2MSP
         AdminPrincipal: Role.ADMIN
-        AnchorPeers:
-            - Host: ANCHOR_PEER_IP
-              Port: 7051
+        MSPDir: ordererOrganizations/car.blockr/msp
+    - &Org1
+        Name: Org1MSP
+        ID: Org1MSP
+        AdminPrincipal: Role.ADMIN
+        MSPDir: peerOrganizations/nar.blockr/msp 
+#        AnchorPeers:
+#            - Host: vm1
+#              Port: 7051
+    - &Org2
+        Name: Org2MSP
+        ID: Org2MSP
+        AdminPrincipal: Role.ADMIN
+        MSPDir: peerOrganizations/car.blockr/msp 
+#        AnchorPeers:
+#            - Host: vm2
+#              Port: 7051
 Orderer: &OrdererDefaults
     OrdererType: solo
     Addresses:
-        - ORDERER_IP:7050
+          - vm1:7050
+          - vm2:7050
     BatchTimeout: 1ms
     BatchSize:
         MaxMessageCount: 10
