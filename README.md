@@ -3,7 +3,7 @@
 This tool was created to help maintain the regional Block R processing nodes.  Here are some notes:
 
 - Each processing node consists of a single orderer and a single peer
-- If Hyperledger Fabric is inot installed on a targeted xsnode, it will be installed
+- If Hyperledger Fabric is inot installed on a targeted node, it will be installed
 - The network can be specified to communicate with or without TLS.   
 - Only one channel is defined. 
 
@@ -24,37 +24,50 @@ This tool was created to help maintain the regional Block R processing nodes.  H
 **Installation**
 
 1. Run the `install.sh` script to setup the environment and install Hyperledger Fabric
-2. Edit `config.sh` with the hostnames of the servers that are to be used as nodes 
-3. Run the `provision.sh` script
+2. Edit `blockr-config.yaml` and `confitx.yaml` in the templates directory with the hostnames of the servers that are to be used as nodes 
+3. Provision the system using the instructions below. 
 
 ---
 
 **Operation**
 
-The following scripts are included:
+The following primary scripts are included:
 
-- `config.sh` a space delimited list of Fully Qualified Domain Names (FQDN) for the nodes 
+- `create_channel.sh` adds the peer on each node to the "blockr" channel  
 - `install.sh` install Hyperledget Fabric and prepared the server 
+- `install_chaincode.sh` installs chaincode on each node 
 - `provision.sh` performs the provisioning 
 - `reset.sh` sets the server to its initial state, but does not install Hyperledger Fabric 
+- `start_nodes.sh` starts both peer and orderer daemons on each node of the system. 
+- `stop_nodes.sh` stops both peer and orderer daemons on each node of the system. 
 
----
+There is also a `scripts` directory that contains:
+
+- `invoke.sh' used to modify contents of the edger for testing
+- `query.sh' used to inspect the contents of the ledger duting testing
+
+Here is the sequence of operations neeeded to install a network: 
+
+- `provision.sh` prepares each node using configuration information from the `blockr-config.yaml` and `confitx.yaml` files in the templates directory.  Creates blocks and transactions required fro the `blockr` channel.    
+- `start_nodes.sh` starts peer and orderer daemons on each node of the system. 
+- `create_channel.sh` performs three operations on the peer of each node:
+-- defines the `blockr` channel 
+-- joins the `blockr` channel 
+-- defines the peer as an `AnchorPeer` to facilitate Hyperledger gossip communications 
+- `stop_nodes.sh` to stop the nodes.  We are working to eliminate this step.
+- `start_nodes.sh` to restart the nodeswith the channel operational.
+
+After installation, each node can be tested using the `query.sh` and `invoke.sh` scripts.
 
 ---
 
 **Disclaimers/Warnings**
 
- The script is destructive to any server running Hyperledger Fabric.  It resets `/var/hyerledger/production` and deletes docker images.  Only run this script on VMs / servers created solely for Block R installation.
+The script is destructive to any server running Hyperledger Fabric.  It resets `/var/hyperledger/production`and deletes docker images.  Only run this script on VMs / servers created solely for Block R installation.
 
-The following binaries are copied from Hyperledger Fabric to for provisioning:
-
-- configtxgen 
-- cryptogen 
-- peer
- 
 ---
 
 **Acknowledgements**
 
-This work was paterned after work from Yacov Manevich found on [github] (https://github.com/yacovm/fabricDeployment)
+This work is a collaborative effort of six REALTOR(R) Associations.
 
