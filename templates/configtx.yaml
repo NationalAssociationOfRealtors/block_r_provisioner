@@ -41,17 +41,17 @@ Organizations:
         ID: Org1MSP
         AdminPrincipal: Role.ADMIN
         MSPDir: peerOrganizations/nar.blockr/msp 
-#        AnchorPeers:
-#            - Host: vm1
-#              Port: 7051
+        AnchorPeers:
+            - Host: vm1
+              Port: 7051
     - &Org2
         Name: Org2MSP
         ID: Org2MSP
         AdminPrincipal: Role.ADMIN
         MSPDir: peerOrganizations/car.blockr/msp 
-#        AnchorPeers:
-#            - Host: vm2
-#              Port: 7051
+        AnchorPeers:
+            - Host: vm2
+              Port: 7051
 Orderer: &OrdererDefaults
     OrdererType: solo
     Addresses:

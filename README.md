@@ -3,7 +3,7 @@
 This tool was created to help maintain the regional Block R processing nodes.  Here are some notes:
 
 - Each processing node consists of a single orderer and a single peer
-- If Hyperledger Fabric is inot installed on a targeted node, it will be installed
+- If Hyperledger Fabric is not installed on a targeted node, it will be installed
 - The network can be specified to communicate with or without TLS.   
 - Only one channel is defined. 
 
@@ -37,7 +37,7 @@ The following primary scripts are included:
 - `install.sh` install Hyperledget Fabric and prepared the server 
 - `install_chaincode.sh` installs chaincode on each node 
 - `provision.sh` performs the provisioning 
-- `reset.sh` sets the server to its initial state, but does not install Hyperledger Fabric 
+- `resetEnv.sh` sets the server to its initial state, but does not install Hyperledger Fabric 
 - `start_nodes.sh` starts both peer and orderer daemons on each node of the system. 
 - `stop_nodes.sh` stops both peer and orderer daemons on each node of the system. 
 
@@ -54,10 +54,11 @@ Here is the sequence of operations neeeded to install a network:
 -- defines the `blockr` channel 
 -- joins the `blockr` channel 
 -- defines the peer as an `AnchorPeer` to facilitate Hyperledger gossip communications 
-- `stop_nodes.sh` to stop the nodes.  We are working to eliminate this step.
-- `start_nodes.sh` to restart the nodeswith the channel operational.
+- `install_chaincode.sh` installs chaincode on each.
 
 After installation, each node can be tested using the `query.sh` and `invoke.sh` scripts.
+
+When you are done testing, use the `stop_nodes.sh` script to stop the nodes.  
 
 ---
 

@@ -45,6 +45,10 @@ distribute_channel_driver() {
   echo -n '$FABRIC_PATH/build/bin/peer channel create -f $FABRIC_CFG_PATH/blockr.tx -c blockr -o ' >> $CHANNEL_DRIVER_NAME
   echo -n $1 >> $CHANNEL_DRIVER_NAME
   echo ':7050' >> $CHANNEL_DRIVER_NAME
+  echo 'if ! [ -f blockr.block ]; then' >> $CHANNEL_DRIVER_NAME
+  echo 'echo ERROR' >> $CHANNEL_DRIVER_NAME
+  echo 'exit 1' >> $CHANNEL_DRIVER_NAME
+  echo 'fi' >> $CHANNEL_DRIVER_NAME
   echo 'mv blockr.block $FABRIC_CFG_PATH' >> $CHANNEL_DRIVER_NAME
   echo 'echo "----------"' >> $CHANNEL_DRIVER_NAME
   echo 'echo " Join the channel"' >> $CHANNEL_DRIVER_NAME
