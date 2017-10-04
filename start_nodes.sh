@@ -71,7 +71,7 @@ start_node_driver() {
   echo -n $3 >> $ORDERER_DRIVER_NAME
   echo '/msp' >> $ORDERER_DRIVER_NAME
   echo -n 'export ORDERER_GENERAL_LOCALMSPID=' >> $ORDERER_DRIVER_NAME
-  echo $2 >> $ORDERER_DRIVER_NAME
+  echo $4 >> $ORDERER_DRIVER_NAME
   echo -n '$FABRIC_PATH/build/bin/orderer &> $FABRIC_PATH/' >> $ORDERER_DRIVER_NAME
   echo -n $1 >> $ORDERER_DRIVER_NAME
   echo '_orderer.out &' >> $ORDERER_DRIVER_NAME
@@ -91,6 +91,6 @@ echo "| Block R Provisoner"
 echo "|"
 echo "'----------------"
 
-start_node_driver vm1 Org1MSP nar.blockr
-start_node_driver vm2 Org2MSP car.blockr
+start_node_driver vm1 Org1MSP nar.blockr Orderer1MSP
+start_node_driver vm2 Org2MSP car.blockr Orderer2MSP
 
