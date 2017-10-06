@@ -1,5 +1,5 @@
 
-export WAIT_SECONDS=5
+export WAIT_SECONDS=1
 
 shutdown_node() {
   echo "----------"
@@ -18,5 +18,4 @@ echo "'----------------"
 shutdown_node vm1
 sleep $WAIT_SECONDS 
 shutdown_node vm2
-sleep $WAIT_SECONDS 
 

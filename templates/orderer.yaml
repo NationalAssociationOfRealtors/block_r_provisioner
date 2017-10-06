@@ -11,19 +11,19 @@ General:
     ListenAddress: 0.0.0.0
     ListenPort: 7050
     TLS:
-        Enabled: false 
-        PrivateKey: ordererOrganizations/blockr/orderers/vm1.blockr/tls/server.key
-        Certificate: ordererOrganizations/blockr/orderers/vm1.blockr/tls/server.crt
+        Enabled: WITH_TLS 
+        PrivateKey: ORDERER_KEY 
+        Certificate: ORDERER_CERT 
         RootCAs:
-          - ordererOrganizations/blockr/orderers/vm1.blockr/tls/ca.crt
+          - ORDERER_ROOTCERT 
         ClientAuthEnabled: false
         ClientRootCAs:
     LogLevel: debug 
     GenesisMethod: file
     GenesisProfile: Genesis
     GenesisFile: genesis.block
-    LocalMSPDir:
-    LocalMSPID:
+    LocalMSPDir: ORDERER_MSP_PATH
+    LocalMSPID: ORDERER_MSP_ID
     Profile:
         Enabled: false
         Address: 0.0.0.0:6060

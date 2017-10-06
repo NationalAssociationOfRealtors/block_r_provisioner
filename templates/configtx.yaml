@@ -7,66 +7,66 @@
 #
 ################################################################################
 Profiles:
-    Genesis:
-        Orderer:
-            <<: *OrdererDefaults
-            Organizations:
-                - *OrdererOrg1
-                - *OrdererOrg2
-        Consortiums:
-             RealtorAssociations:
-                Organizations:
-                - *Org1
-                - *Org2
-    Channels:
-        Consortium: RealtorAssociations 
-        Application:
-            <<: *ApplicationDefaults
-            Organizations:
-                - *Org1
-                - *Org2
+  Genesis:
+    Orderer:
+      <<: *OrdererDefaults
+      Organizations:
+        - *OrdererOrg1
+        - *OrdererOrg2
+    Consortiums:
+      RealtorAssociations:
+        Organizations:
+          - *Org1
+          - *Org2
+  Channels:
+    Consortium: RealtorAssociations 
+    Application:
+      <<: *ApplicationDefaults
+      Organizations:
+        - *Org1
+        - *Org2
 Organizations:
-    - &OrdererOrg1
-        Name: Orderer1MSP
-        ID: Orderer1MSP
-        AdminPrincipal: Role.ADMIN
-        MSPDir: ordererOrganizations/nar.blockr/msp 
-    - &OrdererOrg2
-        Name: Orderer2MSP
-        ID: Orderer2MSP
-        AdminPrincipal: Role.ADMIN
-        MSPDir: ordererOrganizations/car.blockr/msp
-    - &Org1
-        Name: Org1MSP
-        ID: Org1MSP
-        AdminPrincipal: Role.ADMIN
-        MSPDir: peerOrganizations/nar.blockr/msp 
-        AnchorPeers:
-            - Host: vm1
-              Port: 7051
-    - &Org2
-        Name: Org2MSP
-        ID: Org2MSP
-        AdminPrincipal: Role.ADMIN
-        MSPDir: peerOrganizations/car.blockr/msp 
-        AnchorPeers:
-            - Host: vm2
-              Port: 7051
+  - &OrdererOrg1
+    Name: Orderer1MSP
+    ID: Orderer1MSP
+    AdminPrincipal: Role.ADMIN
+    MSPDir: ordererOrganizations/nar.blockr/msp 
+  - &OrdererOrg2
+    Name: Orderer2MSP
+    ID: Orderer2MSP
+    AdminPrincipal: Role.ADMIN
+    MSPDir: ordererOrganizations/car.blockr/msp
+  - &Org1
+    Name: Org1MSP
+    ID: Org1MSP
+    AdminPrincipal: Role.ADMIN
+    MSPDir: peerOrganizations/nar.blockr/msp 
+    AnchorPeers:
+      - Host: vm1
+        Port: 7051
+  - &Org2
+    Name: Org2MSP
+    ID: Org2MSP
+    AdminPrincipal: Role.ADMIN
+    MSPDir: peerOrganizations/car.blockr/msp 
+    AnchorPeers:
+      - Host: vm2
+        Port: 7051
 Orderer: &OrdererDefaults
-    OrdererType: solo
-    Addresses:
-          - vm1:7050
-          - vm2:7050
-    BatchTimeout: 1ms
-    BatchSize:
-        MaxMessageCount: 10
-        AbsoluteMaxBytes: 99 MB
-        PreferredMaxBytes: 512 KB
-    MaxChannels: 0
-    Kafka:
-        Brokers:
-            - 127.0.0.1:9092
-    Organizations:
+  OrdererType: solo
+  Addresses:
+    - vm1:7050
+    - vm2:7050
+  BatchTimeout: 1ms
+  BatchSize:
+    MaxMessageCount: 10
+    AbsoluteMaxBytes: 99 MB
+    PreferredMaxBytes: 512 KB
+  MaxChannels: 0
+  Kafka:
+    Brokers:
+      - 127.0.0.1:9092
+  Organizations:
 Application: &ApplicationDefaults
-    Organizations:
+  Organizations:
 

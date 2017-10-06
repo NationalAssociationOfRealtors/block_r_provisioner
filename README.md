@@ -37,7 +37,8 @@ The following primary scripts are included:
 - `install.sh` install Hyperledget Fabric and prepared the server 
 - `install_chaincode.sh` installs chaincode on each node 
 - `provision.sh` performs the provisioning 
-- `resetEnv.sh` sets the server to its initial state, but does not install Hyperledger Fabric 
+- `resetEnv.sh` sets the local server to its initial state, but does not install Hyperledger Fabric 
+- `reset_nodes.sh` sets the all nodes on the channel to its initial state 
 - `start_nodes.sh` starts both peer and orderer daemons on each node of the system. 
 - `stop_nodes.sh` stops both peer and orderer daemons on each node of the system. 
 
@@ -48,6 +49,7 @@ There is also a `scripts` directory that contains:
 
 Here is the sequence of operations neeeded to install a network: 
 
+- `reset_nodes.sh` ensures there are no artifacts remaining on any of the nodes.
 - `provision.sh` prepares each node using configuration information from the `blockr-config.yaml` and `confitx.yaml` files in the templates directory.  Creates blocks and transactions required fro the `blockr` channel.    
 - `start_nodes.sh` starts peer and orderer daemons on each node of the system. 
 - `create_channel.sh` performs three operations on the peer of each node:

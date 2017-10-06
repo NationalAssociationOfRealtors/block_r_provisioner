@@ -22,17 +22,17 @@ logging:
     grpc:       warning 
     format: '%{color}%{time:2006-01-02 15:04:05.000 MST} [%{module}] %{shortfunc} -> %{level:.4s} %{id:03x}%{color:reset} %{message}'
 peer:
-    id:
+    id: PEER_ID
     networkId: dev
     listenAddress: 0.0.0.0:7051
-    address:
+    address: PEER_ADDRESS
     addressAutoDetect: false
     gomaxprocs: -1
     workers: 2
     gossip:
-        bootstrap:
-        useLeaderElection: 
-        orgLeader: 
+        bootstrap: PEER_BOOTSTRAP
+        useLeaderElection: false 
+        orgLeader: true 
         endpoint: true
         maxBlockCountToStore: 100
         maxPropagationBurstLatency: 10ms
@@ -67,13 +67,13 @@ peer:
         buffersize: 100
         timeout: 10ms
     tls:
-        enabled: false 
+        enabled: WITH_TLS 
         cert:
-            file: peerOrganizations/blockr/peers/vm1.blockr/tls/server.crt
+            file: PEER_CERT 
         key:
-            file: peerOrganizations/blockr/peers/vm1.blockr/tls/server.key
+            file: PEER_KEY 
         rootcert:
-            file: peerOrganizations/blockr/peers/vm1.blockr/tls/ca.crt
+            file: PEER_ROOTCERT 
         serverhostoverride:
     fileSystemPath: /var/hyperledger/production
     BCCSP:
@@ -83,7 +83,7 @@ peer:
             Security: 256
             FileKeyStore:
                 KeyStore:
-    mspConfigPath:
+    mspConfigPath: PEER_MSP_PATH
 
     # Identifier of the local MSP
     # ----!!!!IMPORTANT!!!-!!!IMPORTANT!!!-!!!IMPORTANT!!!!----
@@ -92,7 +92,7 @@ peer:
     # to match the name of one of the MSPs in each of the channel
     # that this peer is a member of. Otherwise this peer's messages
     # will not be identified as valid by other nodes.
-    localMspId:
+    localMspId: PEER_MSP_ID
     profile:
         enabled:     false
         listenAddress: 0.0.0.0:6060
