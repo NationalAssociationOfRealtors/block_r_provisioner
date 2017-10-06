@@ -33,30 +33,55 @@ peer:
         bootstrap: PEER_BOOTSTRAP
         useLeaderElection: false 
         orgLeader: true 
+        # ID of this instance
         endpoint: true
+        # Maximum count of blocks we store in memory
         maxBlockCountToStore: 100
+        # Max time between consecutive message pushes(unit: millisecond)
         maxPropagationBurstLatency: 10ms
-        maxPropagationBurstSize: 10
+        # Max number of messages stored until it triggers a push to remote peers
+        maxPropagationBurstSize: 2
+        # Number of times a message is pushed to remote peers
         propagateIterations: 1
-        propagatePeerNum: 3
+        # Number of peers selected to push messages to
+        propagatePeerNum: 4
+        # Determines frequency of pull phases(unit: second)
         pullInterval: 4s
+        # Number of peers to pull from
         pullPeerNum: 3
-        requestStateInfoInterval: 4s
-        publishStateInfoInterval: 4s
+        # Determines frequency of pulling state info messages from peers(unit: second)
+        requestStateInfoInterval: 2s
+        # Determines frequency of pushing state info messages to peers(unit: second)
+        publishStateInfoInterval: 2s
+        # Maximum time a stateInfo message is kept until expired
         stateInfoRetentionInterval:
+        # Time from startup certificates are included in Alive messages(unit: second)
         publishCertPeriod: 10s
+        # Should we skip verifying block messages or not
         skipBlockVerification: false
+        # Dial timeout(unit: second)
         dialTimeout: 3s
+        # Connection timeout(unit: second)
         connTimeout: 2s
-        recvBuffSize: 20
+        # Buffer size of received messages
+        recvBuffSize: 50
+        # Buffer size of sending messages
         sendBuffSize: 200
+        # Time to wait before pull engine processes incoming digests (unit: second)
         digestWaitTime: 1s
+        # Time to wait before pull engine removes incoming nonce (unit: second)
         requestWaitTime: 1s
+        # Time to wait before pull engine ends pull (unit: second)
         responseWaitTime: 2s
+        # Alive check interval(unit: second)
         aliveTimeInterval: 5s
+        # Alive expiration timeout(unit: second)
         aliveExpirationTimeout: 25s
+        # Reconnect interval(unit: second)
         reconnectInterval: 25s
-        externalEndpoint:
+        # This is an endpoint that is published to peers outside of the organization.
+        # If this isn't set, the peer will not be known to other organizations.
+        externalEndpoint: PEER_ID
         election:
             startupGracePeriod: 15s
             membershipSampleInterval: 1s

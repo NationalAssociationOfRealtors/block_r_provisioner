@@ -1,10 +1,7 @@
 
 export CONFIG_DIR=blockr_config
-#export CORE_PEER_ADDRESS=vm1:7051 
-#export CORE_PEER_LOCALMSPID=Org1MSP 
 export FABRIC_PATH=$GOPATH/src/github.com/hyperledger/fabric
 export FABRIC_CFG_PATH=$FABRIC_PATH/$CONFIG_DIR
-#export CORE_PEER_MSPCONFIGPATH=$FABRIC_CFG_PATH/peerOrganizations/nar.blockr/users/Admin@nar.blockr/msp/ 
 export CHANNEL_DRIVER_NAME=join_channel_driver.sh
 export WITH_TLS=true
 export WAIT_SECONDS=1
