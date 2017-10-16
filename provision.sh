@@ -1,13 +1,14 @@
 
 export CONFIG_DIR=blockr_config
 export DEBUG=false
-export SETUP_DRIVER_NAME=prepare_node_driver.sh
+export PREPARE_DRIVER_NAME=prepare_node_driver.sh
+export RESET_DRIVER_NAME=reset_node_driver.sh
 export FABRIC_CFG_PATH=./$CONFIG_DIR
 export FABRIC_PATH=$GOPATH/src/github.com/hyperledger/fabric
 export PRODUCTION_DIR=/var/hyperledger
 export TARGET_CFG_PATH=$FABRIC_PATH/$CONFIG_DIR
 export TEMP_CFG_PATH=./$CONFIG_DIR.temp
-export WAIT_SECONDS=1
+export WAIT_SECONDS=5
 export WITH_TLS=true
 
 distribute_conf() {
@@ -46,8 +47,6 @@ distribute_conf() {
   cat $TEMP_CFG_PATH/orderer.yml.template | sed "s:WITH_TLS:$WITH_TLS: ; s:ORDERER_CERT:$ORDERER_GENERAL_TLS_CERTIFICATE: ; s:ORDERER_KEY:$ORDERER_GENERAL_TLS_PRIVATEKEY: ; s:ORDERER_ROOTCERT:$ORDERER_GENERAL_TLS_ROOTCAS: ; s:ORDERER_MSP_PATH:$ORDERER_MSP_PATH: ; s:ORDERER_MSP_ID:$4:   " > $TEMP_CFG_PATH/orderer.yaml
   rm $TEMP_CFG_PATH/orderer.yml.template
 
-  ssh $1 "rm -rf $TARGET_CFG_PATH"
-  ssh $1 "mkdir -p $TARGET_CFG_PATH"
   scp -rq $TEMP_CFG_PATH/* $1:$TARGET_CFG_PATH
   rm -rf $TEMP_CFG_PATH
 }
@@ -57,66 +56,88 @@ prepare() {
   echo " Preparing Node $1"
   echo "----------"
 
-#
-# create the driver script
-#
-  echo '#!/bin/bash' > $SETUP_DRIVER_NAME
-  echo '' >> $SETUP_DRIVER_NAME
-  echo '#----------------' >> $SETUP_DRIVER_NAME
-  echo '#' >> $SETUP_DRIVER_NAME
-  echo '# Block R Setup Driver' >> $SETUP_DRIVER_NAME
-  echo '#' >> $SETUP_DRIVER_NAME
-  echo '#----------------' >> $SETUP_DRIVER_NAME
-  echo -n 'export TARGET_CFG_PATH=' >> $SETUP_DRIVER_NAME 
-  echo $TARGET_CFG_PATH >> $SETUP_DRIVER_NAME 
-  echo -n 'export PRODUCTION_DIR=' >> $SETUP_DRIVER_NAME 
-  echo $PRODUCTION_DIR >> $SETUP_DRIVER_NAME 
-  echo 'echo " - Stop running daemons"' >> $SETUP_DRIVER_NAME
-  echo 'sudo pkill orderer' >> $SETUP_DRIVER_NAME
-  echo 'sudo pkill peer' >> $SETUP_DRIVER_NAME
-  echo 'echo " - Remove docker images"' >> $SETUP_DRIVER_NAME
-  echo 'sudo docker ps -aq | xargs docker kill &> /dev/null' >> $SETUP_DRIVER_NAME
-  echo 'sudo docker ps -aq | xargs docker rm &> /dev/null' >> $SETUP_DRIVER_NAME
-  echo "sudo docker images | grep 'dev-' | awk '{print $3}' | xargs docker rmi &> /dev/null" >> $SETUP_DRIVER_NAME
-  echo -n 'echo " - Reset configuration ' >> $SETUP_DRIVER_NAME
-  echo -n $TARGET_CFG_PATH >> $SETUP_DRIVER_NAME
-  echo '"' >> $SETUP_DRIVER_NAME
-  echo -n 'rm -rf ' >> $SETUP_DRIVER_NAME
-  echo $TARGET_CFG_PATH >> $SETUP_DRIVER_NAME
-  echo -n 'mkdir ' >> $SETUP_DRIVER_NAME
-  echo $TARGET_CFG_PATH >> $SETUP_DRIVER_NAME
-  echo 'echo " - Stop daemons"' >> $SETUP_DRIVER_NAME
-  echo 'sudo /etc/init.d/couchdb stop &> /dev/null' >> $SETUP_DRIVER_NAME
-  echo 'sudo systemctl stop kafka' >> $SETUP_DRIVER_NAME
+  echo '#!/bin/bash' > $PREPARE_DRIVER_NAME
+  echo '' >> $PREPARE_DRIVER_NAME
+  echo '#----------------' >> $PREPARE_DRIVER_NAME
+  echo '#' >> $PREPARE_DRIVER_NAME
+  echo '# Block R Preparation Driver' >> $PREPARE_DRIVER_NAME
+  echo '#' >> $PREPARE_DRIVER_NAME
+  echo '#----------------' >> $PREPARE_DRIVER_NAME
+  echo -n 'export TARGET_CFG_PATH=' >> $PREPARE_DRIVER_NAME 
+  echo $TARGET_CFG_PATH >> $PREPARE_DRIVER_NAME 
+  echo 'echo " - Stop running daemons"' >> $PREPARE_DRIVER_NAME
+  echo 'sudo pkill orderer' >> $PREPARE_DRIVER_NAME
+  echo 'sudo pkill peer' >> $PREPARE_DRIVER_NAME
+  echo 'echo " - Remove docker images"' >> $PREPARE_DRIVER_NAME
+  echo 'sudo docker ps -aq | xargs docker kill &> /dev/null' >> $PREPARE_DRIVER_NAME
+  echo 'sudo docker ps -aq | xargs docker rm &> /dev/null' >> $PREPARE_DRIVER_NAME
+  echo "sudo docker images | grep 'dev-' | awk '{print $3}' | xargs docker rmi &> /dev/null" >> $PREPARE_DRIVER_NAME
+  echo -n 'echo " - Reset configuration ' >> $PREPARE_DRIVER_NAME
+  echo -n $TARGET_CFG_PATH >> $PREPARE_DRIVER_NAME
+  echo '"' >> $PREPARE_DRIVER_NAME
+  echo -n 'rm -rf ' >> $PREPARE_DRIVER_NAME
+  echo $TARGET_CFG_PATH >> $PREPARE_DRIVER_NAME
+  echo -n 'mkdir ' >> $PREPARE_DRIVER_NAME
+  echo $TARGET_CFG_PATH >> $PREPARE_DRIVER_NAME
+  echo 'echo " - Stop daemons"' >> $PREPARE_DRIVER_NAME
+  echo 'sudo /etc/init.d/couchdb stop &> /dev/null' >> $PREPARE_DRIVER_NAME
+  echo 'sudo systemctl stop kafka' >> $PREPARE_DRIVER_NAME
   if [ "$1" = "vm1" ]; then
-    echo 'sudo systemctl stop zookeeper' >> $SETUP_DRIVER_NAME
+    echo 'sudo systemctl stop zookeeper' >> $PREPARE_DRIVER_NAME
   fi
-  echo 'echo " - Reset production repositories"' >> $SETUP_DRIVER_NAME
-  echo 'if [ -d $PRODUCTION_DIR ]; then' >> $SETUP_DRIVER_NAME
-  echo '  sudo rm -rf $PRODUCTION_DIR' >> $SETUP_DRIVER_NAME
-  echo 'fi' >> $SETUP_DRIVER_NAME
-  echo 'sudo mkdir $PRODUCTION_DIR' >> $SETUP_DRIVER_NAME
-  echo 'sudo chown $(whoami):$(whoami) $PRODUCTION_DIR' >> $SETUP_DRIVER_NAME
-  echo 'if [ -d tmp.zookeeper ]; then' >> $SETUP_DRIVER_NAME
-  echo '  sudo -rm -rf /tmp/zookeeper' >> $SETUP_DRIVER_NAME
-  echo 'fi' >> $SETUP_DRIVER_NAME
-  echo 'if [ -d tmp.kafka-logs ]; then' >> $SETUP_DRIVER_NAME
-  echo '  sudo -rm -rf /tmp/kafka-logs' >> $SETUP_DRIVER_NAME
-  echo 'fi' >> $SETUP_DRIVER_NAME
-  echo 'echo " - Start daemons"' >> $SETUP_DRIVER_NAME
-  if [ "$1" = "vm1" ]; then
-    echo 'sudo systemctl start zookeeper' >> $SETUP_DRIVER_NAME
-  fi
-  echo 'sudo systemctl start kafka' >> $SETUP_DRIVER_NAME
-  echo 'sudo /etc/init.d/couchdb start &> /dev/null' >> $SETUP_DRIVER_NAME
-
-  scp -q ./$SETUP_DRIVER_NAME $1: 
-  ssh $1 "chmod 777 $SETUP_DRIVER_NAME"
-  ssh $1 "./$SETUP_DRIVER_NAME"
+  scp -q ./$PREPARE_DRIVER_NAME $1: 
+  ssh $1 "chmod 777 $PREPARE_DRIVER_NAME"
+  ssh $1 "./$PREPARE_DRIVER_NAME"
   if [ "$DEBUG" != true ]; then
-    ssh $1 "rm ./$SETUP_DRIVER_NAME"
+    ssh $1 "rm ./$PREPARE_DRIVER_NAME"
   fi
-  rm ./$SETUP_DRIVER_NAME
+  rm ./$PREPARE_DRIVER_NAME
+}
+
+reset() {
+  echo "----------"
+  echo " Resetting Node $1"
+  echo "----------"
+
+  echo '#!/bin/bash' > $RESET_DRIVER_NAME
+  echo '' >> $RESET_DRIVER_NAME
+  echo '#----------------' >> $RESET_DRIVER_NAME
+  echo '#' >> $RESET_DRIVER_NAME
+  echo '# Block R Reset Driver' >> $RESET_DRIVER_NAME
+  echo '#' >> $RESET_DRIVER_NAME
+  echo '#----------------' >> $RESET_DRIVER_NAME
+  echo -n 'export PRODUCTION_DIR=' >> $RESET_DRIVER_NAME 
+  echo $PRODUCTION_DIR >> $RESET_DRIVER_NAME 
+  echo 'echo " - Reset production repositories"' >> $RESET_DRIVER_NAME
+  echo 'if [ -d $PRODUCTION_DIR ]; then' >> $RESET_DRIVER_NAME
+  echo '  sudo rm -rf $PRODUCTION_DIR' >> $RESET_DRIVER_NAME
+  echo 'fi' >> $RESET_DRIVER_NAME
+  echo 'sudo mkdir $PRODUCTION_DIR' >> $RESET_DRIVER_NAME
+  echo 'sudo chown $(whoami):$(whoami) $PRODUCTION_DIR' >> $RESET_DRIVER_NAME
+  echo 'if [ -d tmp.zookeeper ]; then' >> $RESET_DRIVER_NAME
+  echo '  sudo -rm -rf /tmp/zookeeper' >> $RESET_DRIVER_NAME
+  echo 'fi' >> $RESET_DRIVER_NAME
+  echo 'if [ -d tmp.kafka-logs ]; then' >> $RESET_DRIVER_NAME
+  echo '  sudo -rm -rf /tmp/kafka-logs' >> $RESET_DRIVER_NAME
+  echo 'fi' >> $RESET_DRIVER_NAME
+  echo 'echo " - Start daemons"' >> $RESET_DRIVER_NAME
+  if [ "$1" = "vm1" ]; then
+    echo 'sudo systemctl start zookeeper' >> $RESET_DRIVER_NAME
+    echo 'echo " - Wait for Zookeeper to start"' >> $RESET_DRIVER_NAME
+    echo -n 'sleep ' >> $RESET_DRIVER_NAME
+    echo $WAIT_SECONDS >> $RESET_DRIVER_NAME
+    echo 'echo " - Zookeeper started"' >> $RESET_DRIVER_NAME
+  fi
+  echo 'sudo systemctl start kafka' >> $RESET_DRIVER_NAME
+  echo 'sudo /etc/init.d/couchdb start &> /dev/null' >> $RESET_DRIVER_NAME
+
+  scp -q ./$RESET_DRIVER_NAME $1: 
+  ssh $1 "chmod 777 $RESET_DRIVER_NAME"
+  ssh $1 "./$RESET_DRIVER_NAME"
+  if [ "$DEBUG" != true ]; then
+    ssh $1 "rm ./$RESET_DRIVER_NAME"
+  fi
+  rm ./$RESET_DRIVER_NAME
 }
 
 echo ".----------------"
@@ -127,6 +148,8 @@ echo "'----------------"
 
 prepare vm1
 prepare vm2
+reset vm1
+reset vm2
 
 echo "----------"
 echo " Reset local configuration directory $FABRIC_CFG_PATH"
