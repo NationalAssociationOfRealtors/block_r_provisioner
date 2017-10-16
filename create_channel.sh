@@ -1,20 +1,22 @@
 
 export CONFIG_DIR=blockr_config
+export DEBUG=true
+export DELAY_TIME=60
 export FABRIC_PATH=$GOPATH/src/github.com/hyperledger/fabric
 export FABRIC_CFG_PATH=$FABRIC_PATH/$CONFIG_DIR
 export CHANNEL_DRIVER_NAME=join_channel_driver.sh
 export WITH_TLS=true
-export WAIT_SECONDS=1
+export WAIT_SECONDS=5
 
 distribute_channel_driver() {
-  echo ""
-  echo "----------"
-  echo " Create channel on Node $1"
-  echo "----------"
+#  echo ""
+#  echo "----------"
+#  echo " Create channel on Node $1"
+#  echo "----------"
 
   ORDERER_TLS=''
   if [ "$WITH_TLS" = true ]; then
-    ORDERER_TLS="--tls true --cafile $FABRIC_CFG_PATH/ordererOrganizations/$3/orderers/$1.$3/tls/ca.crt"
+    ORDERER_TLS=" --tls true --cafile $FABRIC_CFG_PATH/ordererOrganizations/$3/orderers/$1.$3/tls/ca.crt"
   fi
 
 #
@@ -27,6 +29,8 @@ distribute_channel_driver() {
   echo '# Block R Channel Driver' >> $CHANNEL_DRIVER_NAME
   echo '#' >> $CHANNEL_DRIVER_NAME
   echo '#----------------' >> $CHANNEL_DRIVER_NAME
+#  echo -n 'export CORE_PEER_LOCALMSPID=' >> $CHANNEL_DRIVER_NAME
+#  echo $2 >> $CHANNEL_DRIVER_NAME
   echo -n 'export FABRIC_PATH=' >> $CHANNEL_DRIVER_NAME
   echo $FABRIC_PATH >> $CHANNEL_DRIVER_NAME
   echo -n 'export FABRIC_CFG_PATH=' >> $CHANNEL_DRIVER_NAME
@@ -44,7 +48,12 @@ distribute_channel_driver() {
   echo -n '$FABRIC_PATH/build/bin/peer channel create -f $FABRIC_CFG_PATH/blockr.tx -c blockr -o ' >> $CHANNEL_DRIVER_NAME
   echo -n $1 >> $CHANNEL_DRIVER_NAME
   echo -n ':7050 ' >> $CHANNEL_DRIVER_NAME
+  echo -n '-t ' >> $CHANNEL_DRIVER_NAME
+  echo -n $DELAY_TIME >> $CHANNEL_DRIVER_NAME
+  echo -n " " >> $CHANNEL_DRIVER_NAME
   echo $ORDERER_TLS >> $CHANNEL_DRIVER_NAME
+  echo -n "sleep " >> $CHANNEL_DRIVER_NAME
+  echo $WAIT_SECONDS >> $CHANNEL_DRIVER_NAME
   echo 'if ! [ -f blockr.block ]; then' >> $CHANNEL_DRIVER_NAME
   echo 'echo ERROR' >> $CHANNEL_DRIVER_NAME
   echo 'exit 1' >> $CHANNEL_DRIVER_NAME
@@ -55,25 +64,34 @@ distribute_channel_driver() {
   echo 'echo "----------"' >> $CHANNEL_DRIVER_NAME
   echo -n '$FABRIC_PATH/build/bin/peer channel join -b $FABRIC_CFG_PATH/blockr.block -o ' >> $CHANNEL_DRIVER_NAME
   echo -n $1 >> $CHANNEL_DRIVER_NAME
-  echo -n ':7050' >> $CHANNEL_DRIVER_NAME
+  echo -n ':7050 ' >> $CHANNEL_DRIVER_NAME
   echo $ORDERER_TLS >> $CHANNEL_DRIVER_NAME
+  echo -n "sleep " >> $CHANNEL_DRIVER_NAME
+  echo $WAIT_SECONDS >> $CHANNEL_DRIVER_NAME
   echo 'echo "----------"' >> $CHANNEL_DRIVER_NAME
   echo 'echo " Update the channel for Anchor Peer"' >> $CHANNEL_DRIVER_NAME
   echo 'echo "----------"' >> $CHANNEL_DRIVER_NAME
-  echo -n '#$FABRIC_PATH/build/bin/peer channel update -f $FABRIC_CFG_PATH/' >> $CHANNEL_DRIVER_NAME
+  echo -n '$FABRIC_PATH/build/bin/peer channel update -f $FABRIC_CFG_PATH/' >> $CHANNEL_DRIVER_NAME
   echo -n "$2" >> $CHANNEL_DRIVER_NAME
   echo -n 'anchors.tx -c blockr -o ' >> $CHANNEL_DRIVER_NAME
   echo -n "$1" >> $CHANNEL_DRIVER_NAME
-  echo -n ':7050' >> $CHANNEL_DRIVER_NAME
+  echo -n ':7050 ' >> $CHANNEL_DRIVER_NAME
   echo $ORDERER_TLS >> $CHANNEL_DRIVER_NAME
+  echo -n "sleep " >> $CHANNEL_DRIVER_NAME
+  echo $WAIT_SECONDS >> $CHANNEL_DRIVER_NAME
+  echo 'echo "----------"' >> $CHANNEL_DRIVER_NAME
+  echo 'echo " Channel for Anchor Peer completed"' >> $CHANNEL_DRIVER_NAME
+  echo 'echo "----------"' >> $CHANNEL_DRIVER_NAME
 
   scp -q ./$CHANNEL_DRIVER_NAME $1:
   ssh $1 "chmod 777 $CHANNEL_DRIVER_NAME"
   ssh $1 "./$CHANNEL_DRIVER_NAME"
-  ssh $1 "rm ./$CHANNEL_DRIVER_NAME"
+  if [ "$DEBUG" != true ]; then
+   ssh $1 "rm ./$CHANNEL_DRIVER_NAME"
+  fi
   rm ./$CHANNEL_DRIVER_NAME
 
-  sleep $WAIT_SECONDS
+#  sleep $WAIT_SECONDS
 }
 
 echo ".----------------"

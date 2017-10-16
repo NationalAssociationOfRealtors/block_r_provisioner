@@ -2,6 +2,7 @@
 export CHAINCODE_ID='exampleCC -v 1.0'
 export CHAINCODE_PATH='github.com/hyperledger/fabric/examples/chaincode/go/chaincode_example02'
 export CONFIG_DIR=blockr_config
+export DEBUG=false
 export FABRIC_PATH=$GOPATH/src/github.com/hyperledger/fabric
 export FABRIC_CFG_PATH=$FABRIC_PATH/$CONFIG_DIR
 export INSTALL_DRIVER_NAME=install_chaincode_driver.sh
@@ -57,7 +58,9 @@ distribute_chaincode_install_driver() {
   scp -q ./$INSTALL_DRIVER_NAME $1:
   ssh $1 "chmod 777 $INSTALL_DRIVER_NAME"
   ssh $1 "./$INSTALL_DRIVER_NAME"
-  ssh $1 "rm ./$INSTALL_DRIVER_NAME"
+  if [ "$DEBUG" != true ]; then
+    ssh $1 "rm ./$INSTALL_DRIVER_NAME"
+  fi
   rm ./$INSTALL_DRIVER_NAME
 }
 
@@ -76,6 +79,7 @@ distribute_chaincode_instantiate_driver() {
 # create the driver script
 #
   export CHAINCODE_ARGS='{"Args":["init","a","100","b","200"]}'
+  export CHAINCODE_POLICY="OR('Org1.member', 'Org2.member')"
   echo '#!/bin/bash' > $INSTANTIATE_DRIVER_NAME
   echo '' >> $INSTANTIATE_DRIVER_NAME
   echo '#----------------' >> $INSTANTIATE_DRIVER_NAME
@@ -100,7 +104,14 @@ distribute_chaincode_instantiate_driver() {
   echo -n $CHAINCODE_ID >> $INSTANTIATE_DRIVER_NAME
   echo -n " -C blockr -c '" >> $INSTANTIATE_DRIVER_NAME
   echo -n $CHAINCODE_ARGS >> $INSTANTIATE_DRIVER_NAME
-  echo -n "' -o " >> $INSTANTIATE_DRIVER_NAME
+  echo -n "' " >> $INSTANTIATE_DRIVER_NAME
+
+#  echo -n "-P " >> $INSTANTIATE_DRIVER_NAME
+#  echo -n '"' >> $INSTANTIATE_DRIVER_NAME
+#  echo -n $CHAINCODE_POLICY >> $INSTANTIATE_DRIVER_NAME
+#  echo -n '" ' >> $INSTANTIATE_DRIVER_NAME
+
+  echo -n '-o ' >> $INSTANTIATE_DRIVER_NAME
   echo -n $1 >> $INSTANTIATE_DRIVER_NAME
   echo -n ':7050 ' >> $INSTANTIATE_DRIVER_NAME
   echo $ORDERER_TLS >> $INSTANTIATE_DRIVER_NAME
@@ -111,7 +122,9 @@ distribute_chaincode_instantiate_driver() {
   scp -q ./$INSTANTIATE_DRIVER_NAME $1:
   ssh $1 "chmod 777 $INSTANTIATE_DRIVER_NAME"
   ssh $1 "./$INSTANTIATE_DRIVER_NAME"
-  ssh $1 "rm ./$INSTANTIATE_DRIVER_NAME"
+  if [ "$DEBUG" != true ]; then
+    ssh $1 "rm ./$INSTANTIATE_DRIVER_NAME"
+  fi
   rm ./$INSTANTIATE_DRIVER_NAME
 
   sleep $WAIT_SECONDS 
@@ -127,4 +140,5 @@ distribute_chaincode_install_driver vm1 nar.blockr
 distribute_chaincode_install_driver vm2 car.blockr
 
 distribute_chaincode_instantiate_driver vm1 nar.blockr
+#distribute_chaincode_instantiate_driver vm2 car.blockr
 

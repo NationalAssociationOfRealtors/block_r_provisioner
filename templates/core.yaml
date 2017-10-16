@@ -6,6 +6,7 @@
 #
 ###############################################################################
 logging:
+#---------
 #    peer:       info 
 #    cauthdsl:   warning
 #    gossip:     debug
@@ -13,13 +14,22 @@ logging:
 #    msp:        warning
 #    policies:   warning
 #    grpc:       info
-    peer:       warning 
+#---------
+#    peer:       warning 
+#    cauthdsl:   warning 
+#    gossip:     warning 
+#    ledger:     warning 
+#    msp:        warning 
+#    policies:   warning 
+#    grpc:       warning 
+#---------
+    peer:       debug 
     cauthdsl:   warning 
     gossip:     warning 
     ledger:     warning 
     msp:        warning 
-    policies:   warning 
-    grpc:       warning 
+    policies:   debug 
+    grpc:       debug 
     format: '%{color}%{time:2006-01-02 15:04:05.000 MST} [%{module}] %{shortfunc} -> %{level:.4s} %{id:03x}%{color:reset} %{message}'
 peer:
     id: PEER_ID
@@ -81,7 +91,7 @@ peer:
         reconnectInterval: 25s
         # This is an endpoint that is published to peers outside of the organization.
         # If this isn't set, the peer will not be known to other organizations.
-        externalEndpoint: PEER_ID
+        externalEndpoint: PEER_ENDPOINT
         election:
             startupGracePeriod: 15s
             membershipSampleInterval: 1s

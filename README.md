@@ -18,6 +18,7 @@ This tool was created to help maintain the regional Block R processing nodes.  H
 - Ability to do "sudo" without having to enter a password on the servers
 - Ability to ssh without having to enter a password from the machine that runs this script
 - Ability of peers to resolve each other's DNS names and the orderer's DNS name
+- Installed and operatonal Apache Kafka at least at level 0.10.2.0 
 
 ---
 
