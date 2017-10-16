@@ -14,6 +14,11 @@ start_node_driver() {
 
   echo '#!/bin/bash' > $PEER_DRIVER_NAME
   echo '' >> $PEER_DRIVER_NAME
+  echo '#----------------' >> $PEER_DRIVER_NAME
+  echo '#' >> $PEER_DRIVER_NAME
+  echo '# Block R Peer Start Driver' >> $PEER_DRIVER_NAME
+  echo '#' >> $PEER_DRIVER_NAME
+  echo '#----------------' >> $PEER_DRIVER_NAME
   echo -n 'export FABRIC_PATH=' >> $PEER_DRIVER_NAME
   echo $FABRIC_PATH >> $PEER_DRIVER_NAME
   echo -n 'export FABRIC_CFG_PATH=' >> $PEER_DRIVER_NAME
@@ -21,6 +26,7 @@ start_node_driver() {
   if [ "$DEBUG" = true ]; then
     echo 'export CORE_LOGGING_LEVEL=debug' >> $PEER_DRIVER_NAME
   fi
+  echo 'echo " - Peer"' >> $PEER_DRIVER_NAME
   echo -n '$FABRIC_PATH/build/bin/peer node start &> $FABRIC_PATH/' >> $PEER_DRIVER_NAME
   echo -n $1 >> $PEER_DRIVER_NAME
   echo '_peer.out &' >> $PEER_DRIVER_NAME
@@ -43,6 +49,7 @@ start_node_driver() {
   echo $FABRIC_PATH >> $ORDERER_DRIVER_NAME
   echo -n 'export FABRIC_CFG_PATH=' >> $ORDERER_DRIVER_NAME
   echo $FABRIC_CFG_PATH >> $ORDERER_DRIVER_NAME
+  echo 'echo " - Orderer"' >> $ORDERER_DRIVER_NAME
   echo -n '$FABRIC_PATH/build/bin/orderer &> $FABRIC_PATH/' >> $ORDERER_DRIVER_NAME
   echo -n $1 >> $ORDERER_DRIVER_NAME
   echo '_orderer.out &' >> $ORDERER_DRIVER_NAME

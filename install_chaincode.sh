@@ -7,11 +7,10 @@ export FABRIC_PATH=$GOPATH/src/github.com/hyperledger/fabric
 export FABRIC_CFG_PATH=$FABRIC_PATH/$CONFIG_DIR
 export INSTALL_DRIVER_NAME=install_chaincode_driver.sh
 export INSTANTIATE_DRIVER_NAME=instantiate_chaincode_driver.sh
-export WAIT_SECONDS=1
+export WAIT_SECONDS=5
 export WITH_TLS=true
 
 distribute_chaincode_install_driver() {
-  echo ""
   echo "----------"
   echo " Install chaincode on Node $1"
   echo "----------"
@@ -21,9 +20,6 @@ distribute_chaincode_install_driver() {
     ORDERER_TLS="--tls true --cafile $FABRIC_CFG_PATH/ordererOrganizations/$2/orderers/$1.$2/tls/ca.crt"
   fi
 
-#
-# create the driver script
-#
   echo '#!/bin/bash' > $INSTALL_DRIVER_NAME
   echo '' >> $INSTALL_DRIVER_NAME
   echo '#----------------' >> $INSTALL_DRIVER_NAME
@@ -52,9 +48,6 @@ distribute_chaincode_install_driver() {
   echo -n $1 >> $INSTALL_DRIVER_NAME
   echo ':7050' >> $INSTALL_DRIVER_NAME
 
-#
-# remotely execute the driver script
-#
   scp -q ./$INSTALL_DRIVER_NAME $1:
   ssh $1 "chmod 777 $INSTALL_DRIVER_NAME"
   ssh $1 "./$INSTALL_DRIVER_NAME"
@@ -65,7 +58,6 @@ distribute_chaincode_install_driver() {
 }
 
 distribute_chaincode_instantiate_driver() {
-  echo ""
   echo "----------"
   echo " Instantiate the chaincode from Node $1"
   echo "----------"
@@ -75,9 +67,6 @@ distribute_chaincode_instantiate_driver() {
     ORDERER_TLS="--tls true --cafile $FABRIC_CFG_PATH/ordererOrganizations/$2/orderers/$1.$2/tls/ca.crt"
   fi
 
-#
-# create the driver script
-#
   export CHAINCODE_ARGS='{"Args":["init","a","100","b","200"]}'
   export CHAINCODE_POLICY="OR('Org1.member', 'Org2.member')"
   echo '#!/bin/bash' > $INSTANTIATE_DRIVER_NAME
@@ -115,10 +104,11 @@ distribute_chaincode_instantiate_driver() {
   echo -n $1 >> $INSTANTIATE_DRIVER_NAME
   echo -n ':7050 ' >> $INSTANTIATE_DRIVER_NAME
   echo $ORDERER_TLS >> $INSTANTIATE_DRIVER_NAME
+  echo 'echo " - Wait for Kafka to complete"' >> $INSTANTIATE_DRIVER_NAME
+  echo -n "sleep " >> $INSTANTIATE_DRIVER_NAME
+  echo $WAIT_SECONDS >> $INSTANTIATE_DRIVER_NAME
+  echo 'echo " - Kafka complete"' >> $INSTANTIATE_DRIVER_NAME
 
-#
-# remotely execute the driver script
-#
   scp -q ./$INSTANTIATE_DRIVER_NAME $1:
   ssh $1 "chmod 777 $INSTANTIATE_DRIVER_NAME"
   ssh $1 "./$INSTANTIATE_DRIVER_NAME"
@@ -126,8 +116,6 @@ distribute_chaincode_instantiate_driver() {
     ssh $1 "rm ./$INSTANTIATE_DRIVER_NAME"
   fi
   rm ./$INSTANTIATE_DRIVER_NAME
-
-  sleep $WAIT_SECONDS 
 }
 
 echo ".----------------"
@@ -140,5 +128,4 @@ distribute_chaincode_install_driver vm1 nar.blockr
 distribute_chaincode_install_driver vm2 car.blockr
 
 distribute_chaincode_instantiate_driver vm1 nar.blockr
-#distribute_chaincode_instantiate_driver vm2 car.blockr
 

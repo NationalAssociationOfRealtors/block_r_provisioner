@@ -65,7 +65,7 @@ prepare() {
   echo '#----------------' >> $PREPARE_DRIVER_NAME
   echo -n 'export TARGET_CFG_PATH=' >> $PREPARE_DRIVER_NAME 
   echo $TARGET_CFG_PATH >> $PREPARE_DRIVER_NAME 
-  echo 'echo " - Stop running daemons"' >> $PREPARE_DRIVER_NAME
+  echo 'echo " - Stop Hyperledger daemons"' >> $PREPARE_DRIVER_NAME
   echo 'sudo pkill orderer' >> $PREPARE_DRIVER_NAME
   echo 'sudo pkill peer' >> $PREPARE_DRIVER_NAME
   echo 'echo " - Remove docker images"' >> $PREPARE_DRIVER_NAME
@@ -79,7 +79,7 @@ prepare() {
   echo $TARGET_CFG_PATH >> $PREPARE_DRIVER_NAME
   echo -n 'mkdir ' >> $PREPARE_DRIVER_NAME
   echo $TARGET_CFG_PATH >> $PREPARE_DRIVER_NAME
-  echo 'echo " - Stop daemons"' >> $PREPARE_DRIVER_NAME
+  echo 'echo " - Stop CouchDB and Kafka daemons"' >> $PREPARE_DRIVER_NAME
   echo 'sudo /etc/init.d/couchdb stop &> /dev/null' >> $PREPARE_DRIVER_NAME
   echo 'sudo systemctl stop kafka' >> $PREPARE_DRIVER_NAME
   if [ "$1" = "vm1" ]; then
@@ -114,11 +114,11 @@ reset() {
   echo 'fi' >> $RESET_DRIVER_NAME
   echo 'sudo mkdir $PRODUCTION_DIR' >> $RESET_DRIVER_NAME
   echo 'sudo chown $(whoami):$(whoami) $PRODUCTION_DIR' >> $RESET_DRIVER_NAME
-  echo 'if [ -d tmp.zookeeper ]; then' >> $RESET_DRIVER_NAME
-  echo '  sudo -rm -rf /tmp/zookeeper' >> $RESET_DRIVER_NAME
+  echo 'if [ -d /tmp/zookeeper ]; then' >> $RESET_DRIVER_NAME
+  echo '  sudo rm -rf /tmp/zookeeper' >> $RESET_DRIVER_NAME
   echo 'fi' >> $RESET_DRIVER_NAME
-  echo 'if [ -d tmp.kafka-logs ]; then' >> $RESET_DRIVER_NAME
-  echo '  sudo -rm -rf /tmp/kafka-logs' >> $RESET_DRIVER_NAME
+  echo 'if [ -d /tmp/kafka-logs ]; then' >> $RESET_DRIVER_NAME
+  echo '  sudo rm -rf /tmp/kafka-logs' >> $RESET_DRIVER_NAME
   echo 'fi' >> $RESET_DRIVER_NAME
   echo 'echo " - Start daemons"' >> $RESET_DRIVER_NAME
   if [ "$1" = "vm1" ]; then
@@ -146,8 +146,8 @@ echo "| Block R Provisoner"
 echo "|"
 echo "'----------------"
 
-prepare vm1
 prepare vm2
+prepare vm1
 reset vm1
 reset vm2
 
