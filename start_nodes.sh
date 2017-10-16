@@ -27,9 +27,14 @@ start_node_driver() {
     echo 'export CORE_LOGGING_LEVEL=debug' >> $PEER_DRIVER_NAME
   fi
   echo 'echo " - Peer"' >> $PEER_DRIVER_NAME
-  echo -n '$FABRIC_PATH/build/bin/peer node start &> $FABRIC_PATH/' >> $PEER_DRIVER_NAME
+  echo -n 'export LOG_FILE=' >> $PEER_DRIVER_NAME
+  echo -n '$FABRIC_PATH/' >> $PEER_DRIVER_NAME
   echo -n $1 >> $PEER_DRIVER_NAME
-  echo '_peer.out &' >> $PEER_DRIVER_NAME
+  echo '_peer.out' >> $PEER_DRIVER_NAME
+  echo 'if [ -f $LOG_FILE ]; then' >> $PEER_DRIVER_NAME
+  echo '  rm $LOG_FILE' >> $PEER_DRIVER_NAME
+  echo 'fi' >> $PEER_DRIVER_NAME
+  echo '$FABRIC_PATH/build/bin/peer node start &> $LOG_FILE &' >> $PEER_DRIVER_NAME
   scp -q ./$PEER_DRIVER_NAME $1:
   ssh $1 "chmod 777 $PEER_DRIVER_NAME"
   ssh $1 "./$PEER_DRIVER_NAME"
@@ -49,10 +54,22 @@ start_node_driver() {
   echo $FABRIC_PATH >> $ORDERER_DRIVER_NAME
   echo -n 'export FABRIC_CFG_PATH=' >> $ORDERER_DRIVER_NAME
   echo $FABRIC_CFG_PATH >> $ORDERER_DRIVER_NAME
+  if [ "$DEBUG" = true ]; then
+    echo 'export GENERAL_LOGLEVEL=debug' >> $ORDERER_DRIVER_NAME
+  fi
   echo 'echo " - Orderer"' >> $ORDERER_DRIVER_NAME
-  echo -n '$FABRIC_PATH/build/bin/orderer &> $FABRIC_PATH/' >> $ORDERER_DRIVER_NAME
+  echo -n 'export LOG_FILE=' >> $ORDERER_DRIVER_NAME
+  echo -n '$FABRIC_PATH/' >> $ORDERER_DRIVER_NAME
   echo -n $1 >> $ORDERER_DRIVER_NAME
-  echo '_orderer.out &' >> $ORDERER_DRIVER_NAME
+  echo '_orderer.out' >> $ORDERER_DRIVER_NAME
+  echo -n 'export LOG_FILE=' >> $ORDERER_DRIVER_NAME
+  echo -n '$FABRIC_PATH/' >> $ORDERER_DRIVER_NAME
+  echo -n $1 >> $ORDERER_DRIVER_NAME
+  echo '_orderer.out' >> $ORDERER_DRIVER_NAME
+  echo 'if [ -f $LOG_FILE ]; then' >> $ORDERER_DRIVER_NAME
+  echo '  rm $LOG_FILE' >> $ORDERER_DRIVER_NAME
+  echo 'fi' >> $ORDERER_DRIVER_NAME
+  echo '$FABRIC_PATH/build/bin/orderer &> $LOG_FILE &' >> $ORDERER_DRIVER_NAME
   scp -q ./$ORDERER_DRIVER_NAME $1:
   ssh $1 "chmod 777 $ORDERER_DRIVER_NAME"
   ssh $1 "./$ORDERER_DRIVER_NAME"

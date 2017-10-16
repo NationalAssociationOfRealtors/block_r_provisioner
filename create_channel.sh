@@ -8,8 +8,9 @@ export COPY_BLOCK_DRIVER_NAME=copy_block_driver.sh
 export CREATE_ANCHOR_DRIVER_NAME=create_anchor_driver.sh
 export CREATE_CHANNEL_DRIVER_NAME=create_channel_driver.sh
 export JOIN_CHANNEL_DRIVER_NAME=join_channel_driver.sh
-export WITH_TLS=true
 export WAIT_SECONDS=5
+export WITH_ANCHOR_PEERS=false
+export WITH_TLS=true
 
 copy_block_driver() {
   echo "----------"
@@ -203,6 +204,7 @@ create_channel_driver vm1 Org1MSP nar.blockr
 copy_block_driver vm1 vm2 
 join_channel_driver vm1 Org1MSP nar.blockr
 join_channel_driver vm2 Org2MSP car.blockr
-anchor_peer_driver vm1 Org1MSP nar.blockr
-anchor_peer_driver vm2 Org2MSP car.blockr
-
+if [ "$WITH_ANCHOR_PEERS" = true ]; then
+  anchor_peer_driver vm1 Org1MSP nar.blockr
+  anchor_peer_driver vm2 Org2MSP car.blockr
+fi

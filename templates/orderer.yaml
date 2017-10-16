@@ -18,7 +18,7 @@ General:
           - ORDERER_ROOTCERT 
         ClientAuthEnabled: false
         ClientRootCAs:
-    LogLevel: debug 
+    LogLevel: info 
     GenesisMethod: file
     GenesisProfile: Genesis
     GenesisFile: genesis.block
