@@ -24,9 +24,10 @@ This tool was created to help maintain the regional Block R processing nodes.  H
 
 **Installation**
 
-1. Run the `install.sh` script to setup the environment and install Hyperledger Fabric
-2. Edit `blockr-config.yaml` and `confitx.yaml` in the templates directory with the hostnames of the servers that are to be used as nodes 
-3. Provision the system using the instructions below. 
+1. Use the systemd definitions in the /scripts diretory for zooeeper and kafka.
+2. Run the `install.sh` script to setup the environment and install Hyperledger Fabric
+3. Edit `blockr-config.yaml` and `confitx.yaml` in the templates directory with the hostnames of the servers that are to be used as nodes 
+4. Provision the system using the instructions below. 
 
 ---
 
