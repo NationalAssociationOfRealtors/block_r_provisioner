@@ -7,7 +7,7 @@ export FABRIC_PATH=$GOPATH/src/github.com/hyperledger/fabric
 export FABRIC_CFG_PATH=$FABRIC_PATH/$CONFIG_DIR
 export INSTALL_DRIVER_NAME=install_chaincode_driver.sh
 export INSTANTIATE_DRIVER_NAME=instantiate_chaincode_driver.sh
-export WAIT_SECONDS=5
+export WAIT_SECONDS=0
 export WITH_TLS=true
 
 distribute_chaincode_install_driver() {
@@ -104,10 +104,12 @@ distribute_chaincode_instantiate_driver() {
   echo -n $1 >> $INSTANTIATE_DRIVER_NAME
   echo -n ':7050 ' >> $INSTANTIATE_DRIVER_NAME
   echo $ORDERER_TLS >> $INSTANTIATE_DRIVER_NAME
-  echo 'echo " - Wait for Kafka to complete"' >> $INSTANTIATE_DRIVER_NAME
-  echo -n "sleep " >> $INSTANTIATE_DRIVER_NAME
-  echo $WAIT_SECONDS >> $INSTANTIATE_DRIVER_NAME
-  echo 'echo " - Kafka complete"' >> $INSTANTIATE_DRIVER_NAME
+  if ! [ $WAIT_SECONDS = 0 ]; then
+    echo 'echo " - Wait for Kafka to complete"' >> $INSTANTIATE_DRIVER_NAME
+    echo -n "sleep " >> $INSTANTIATE_DRIVER_NAME
+    echo $WAIT_SECONDS >> $INSTANTIATE_DRIVER_NAME
+    echo 'echo " - Kafka complete"' >> $INSTANTIATE_DRIVER_NAME
+  fi
 
   scp -q ./$INSTANTIATE_DRIVER_NAME $1:
   ssh $1 "chmod 777 $INSTANTIATE_DRIVER_NAME"

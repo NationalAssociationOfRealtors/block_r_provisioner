@@ -1,6 +1,4 @@
 
-export WAIT_SECONDS=1
-
 shutdown_node() {
   echo "----------"
   echo " Shutdown Node $1"

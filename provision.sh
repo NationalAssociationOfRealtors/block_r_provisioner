@@ -8,7 +8,8 @@ export FABRIC_PATH=$GOPATH/src/github.com/hyperledger/fabric
 export PRODUCTION_DIR=/var/hyperledger
 export TARGET_CFG_PATH=$FABRIC_PATH/$CONFIG_DIR
 export TEMP_CFG_PATH=./$CONFIG_DIR.temp
-export WAIT_SECONDS=5
+export TEMP1_CFG_PATH=./$CONFIG_DIR.temp1
+export WAIT_SECONDS=0
 export WITH_ANCHOR_PEERS=false
 export WITH_TLS=true
 
@@ -100,6 +101,20 @@ reset() {
   echo " Resetting Node $1"
   echo "----------"
 
+  if [ -d $TEMP1_CFG_PATH ]; then
+    rm -rf $TEMP1_CFG_PATH
+  fi
+  mkdir -p $TEMP1_CFG_PATH
+  cp ./templates/server.properties $TEMP1_CFG_PATH/server.properties.template
+  cat $TEMP1_CFG_PATH/server.properties.template | sed "s|BROKER_ID|$2| ; s|SERVER_ADDRESS|$1| " > $TEMP1_CFG_PATH/server.properties
+  scp $TEMP1_CFG_PATH/server.properties $1: 
+#  rm $TEMP1_CFG_PATH/server.properties.template
+  cp ./templates/zookeeper.properties $TEMP1_CFG_PATH/zookeeper.properties.template
+  cp $TEMP1_CFG_PATH/zookeeper.properties.template $TEMP1_CFG_PATH/zookeeper.properties
+  scp $TEMP1_CFG_PATH/zookeeper.properties $1: 
+#  rm $TEMP1_CFG_PATH/zookeeper.properties.template
+#  rm -rf $TEMP1_CFG_PATH
+
   echo '#!/bin/bash' > $RESET_DRIVER_NAME
   echo '' >> $RESET_DRIVER_NAME
   echo '#----------------' >> $RESET_DRIVER_NAME
@@ -124,10 +139,12 @@ reset() {
   echo 'echo " - Start daemons"' >> $RESET_DRIVER_NAME
   if [ "$1" = "vm1" ]; then
     echo 'sudo systemctl start zookeeper' >> $RESET_DRIVER_NAME
-    echo 'echo " - Wait for Zookeeper to start"' >> $RESET_DRIVER_NAME
-    echo -n 'sleep ' >> $RESET_DRIVER_NAME
-    echo $WAIT_SECONDS >> $RESET_DRIVER_NAME
-    echo 'echo " - Zookeeper started"' >> $RESET_DRIVER_NAME
+    if ! [ $WAIT_SECONDS = 0 ]; then
+      echo 'echo " - Wait for Zookeeper to start"' >> $RESET_DRIVER_NAME
+      echo -n 'sleep ' >> $RESET_DRIVER_NAME
+      echo $WAIT_SECONDS >> $RESET_DRIVER_NAME
+      echo 'echo " - Zookeeper started"' >> $RESET_DRIVER_NAME
+    fi
   fi
   echo 'sudo systemctl start kafka' >> $RESET_DRIVER_NAME
   echo 'sudo /etc/init.d/couchdb start &> /dev/null' >> $RESET_DRIVER_NAME
@@ -149,8 +166,8 @@ echo "'----------------"
 
 prepare vm2
 prepare vm1
-reset vm1
-reset vm2
+reset vm1 1
+reset vm2 2
 
 echo "----------"
 echo " Reset local configuration directory $FABRIC_CFG_PATH"

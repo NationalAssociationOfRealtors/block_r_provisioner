@@ -8,7 +8,7 @@ export COPY_BLOCK_DRIVER_NAME=copy_block_driver.sh
 export CREATE_ANCHOR_DRIVER_NAME=create_anchor_driver.sh
 export CREATE_CHANNEL_DRIVER_NAME=create_channel_driver.sh
 export JOIN_CHANNEL_DRIVER_NAME=join_channel_driver.sh
-export WAIT_SECONDS=5
+export WAIT_SECONDS=0
 export WITH_ANCHOR_PEERS=false
 export WITH_TLS=true
 
@@ -79,10 +79,12 @@ create_channel_driver() {
   echo -n $DELAY_TIME >> $CREATE_CHANNEL_DRIVER_NAME
   echo -n " " >> $CREATE_CHANNEL_DRIVER_NAME
   echo $ORDERER_TLS >> $CREATE_CHANNEL_DRIVER_NAME
-  echo 'echo " - Wait for Kafka to complete"' >> $CREATE_CHANNEL_DRIVER_NAME
-  echo -n "sleep " >> $CREATE_CHANNEL_DRIVER_NAME
-  echo $WAIT_SECONDS >> $CREATE_CHANNEL_DRIVER_NAME
-  echo 'echo " - Kafka complete"' >> $CREATE_CHANNEL_DRIVER_NAME
+  if ! [ $WAIT_SECONDS = 0 ]; then
+    echo 'echo " - Wait for Kafka to complete"' >> $CREATE_CHANNEL_DRIVER_NAME
+    echo -n "sleep " >> $CREATE_CHANNEL_DRIVER_NAME
+    echo $WAIT_SECONDS >> $CREATE_CHANNEL_DRIVER_NAME
+    echo 'echo " - Kafka complete"' >> $CREATE_CHANNEL_DRIVER_NAME
+  fi
   echo 'if ! [ -f blockr.block ]; then' >> $CREATE_CHANNEL_DRIVER_NAME
   echo 'echo ERROR' >> $CREATE_CHANNEL_DRIVER_NAME
   echo 'exit 1' >> $CREATE_CHANNEL_DRIVER_NAME
@@ -130,10 +132,12 @@ join_channel_driver() {
   echo -n $1 >> $JOIN_CHANNEL_DRIVER_NAME
   echo -n ':7050 ' >> $JOIN_CHANNEL_DRIVER_NAME
   echo $ORDERER_TLS >> $JOIN_CHANNEL_DRIVER_NAME
-  echo 'echo " - Wait for Kafka to complete"' >> $JOIN_CHANNEL_DRIVER_NAME
-  echo -n "sleep " >> $JOIN_CHANNEL_DRIVER_NAME
-  echo $WAIT_SECONDS >> $JOIN_CHANNEL_DRIVER_NAME
-  echo 'echo " - Kafka complete"' >> $JOIN_CHANNEL_DRIVER_NAME
+  if ! [ $WAIT_SECONDS = 0 ]; then
+    echo 'echo " - Wait for Kafka to complete"' >> $JOIN_CHANNEL_DRIVER_NAME
+    echo -n "sleep " >> $JOIN_CHANNEL_DRIVER_NAME
+    echo $WAIT_SECONDS >> $JOIN_CHANNEL_DRIVER_NAME
+    echo 'echo " - Kafka complete"' >> $JOIN_CHANNEL_DRIVER_NAME
+  fi
 
   scp -q ./$JOIN_CHANNEL_DRIVER_NAME $1:
   ssh $1 "chmod 777 $JOIN_CHANNEL_DRIVER_NAME"
@@ -179,10 +183,12 @@ anchor_peer_driver() {
   echo -n "$1" >> $CREATE_ANCHOR_DRIVER_NAME
   echo -n ':7050 ' >> $CREATE_ANCHOR_DRIVER_NAME
   echo $ORDERER_TLS >> $CREATE_ANCHOR_DRIVER_NAME
-  echo 'echo " - Wait for Kafka to complete"' >> $CREATE_ANCHOR_DRIVER_NAME
-  echo -n "sleep " >> $CREATE_ANCHOR_DRIVER_NAME
-  echo $WAIT_SECONDS >> $CREATE_ANCHOR_DRIVER_NAME
-  echo 'echo " - Kafka complete"' >> $CREATE_ANCHOR_DRIVER_NAME
+  if ! [ $WAIT_SECONDS = 0 ]; then
+    echo 'echo " - Wait for Kafka to complete"' >> $CREATE_ANCHOR_DRIVER_NAME
+    echo -n "sleep " >> $CREATE_ANCHOR_DRIVER_NAME
+    echo $WAIT_SECONDS >> $CREATE_ANCHOR_DRIVER_NAME
+    echo 'echo " - Kafka complete"' >> $CREATE_ANCHOR_DRIVER_NAME
+  fi
 
   scp -q ./$CREATE_ANCHOR_DRIVER_NAME $1:
   ssh $1 "chmod 777 $CREATE_ANCHOR_DRIVER_NAME"

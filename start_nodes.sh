@@ -5,7 +5,7 @@ export FABRIC_PATH=$GOPATH/src/github.com/hyperledger/fabric
 export FABRIC_CFG_PATH=$FABRIC_PATH/$CONFIG_DIR
 export ORDERER_DRIVER_NAME=start_orderer_driver.sh
 export PEER_DRIVER_NAME=start_peer_driver.sh
-export WAIT_SECONDS=1
+export WAIT_SECONDS=0
 
 start_node_driver() {
   echo "----------"
@@ -78,7 +78,11 @@ start_node_driver() {
   fi
   rm ./$ORDERER_DRIVER_NAME
 
-  sleep $WAIT_SECONDS
+  if ! [ $WAIT_SECONDS = 0 ]; then
+    echo " - Wait for Kafka to propagate"
+    sleep $WAIT_SECONDS
+    echo " - Kafka ready"
+  fi
 }
 
 
