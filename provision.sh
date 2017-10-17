@@ -107,13 +107,13 @@ reset() {
   mkdir -p $TEMP1_CFG_PATH
   cp ./templates/server.properties $TEMP1_CFG_PATH/server.properties.template
   cat $TEMP1_CFG_PATH/server.properties.template | sed "s|BROKER_ID|$2| ; s|SERVER_ADDRESS|$1| " > $TEMP1_CFG_PATH/server.properties
-  scp $TEMP1_CFG_PATH/server.properties $1: 
-#  rm $TEMP1_CFG_PATH/server.properties.template
-  cp ./templates/zookeeper.properties $TEMP1_CFG_PATH/zookeeper.properties.template
-  cp $TEMP1_CFG_PATH/zookeeper.properties.template $TEMP1_CFG_PATH/zookeeper.properties
-  scp $TEMP1_CFG_PATH/zookeeper.properties $1: 
-#  rm $TEMP1_CFG_PATH/zookeeper.properties.template
-#  rm -rf $TEMP1_CFG_PATH
+  scp -q $TEMP1_CFG_PATH/server.properties $1:/opt/kafka_2.11-0.10.2.0/config 
+  if [ "$1" = "vm1" ]; then
+    cp ./templates/zookeeper.properties $TEMP1_CFG_PATH/zookeeper.properties.template
+    cp $TEMP1_CFG_PATH/zookeeper.properties.template $TEMP1_CFG_PATH/zookeeper.properties
+    scp -q $TEMP1_CFG_PATH/zookeeper.properties $1:/opt/kafka_2.11-0.10.2.0/config 
+  fi
+  rm -rf $TEMP1_CFG_PATH
 
   echo '#!/bin/bash' > $RESET_DRIVER_NAME
   echo '' >> $RESET_DRIVER_NAME
@@ -130,11 +130,11 @@ reset() {
   echo 'fi' >> $RESET_DRIVER_NAME
   echo 'sudo mkdir $PRODUCTION_DIR' >> $RESET_DRIVER_NAME
   echo 'sudo chown $(whoami):$(whoami) $PRODUCTION_DIR' >> $RESET_DRIVER_NAME
-  echo 'if [ -d /tmp/zookeeper ]; then' >> $RESET_DRIVER_NAME
-  echo '  sudo rm -rf /tmp/zookeeper' >> $RESET_DRIVER_NAME
+  echo 'if [ -d /var/zookeeper ]; then' >> $RESET_DRIVER_NAME
+  echo '  sudo rm -rf /var/zookeeper' >> $RESET_DRIVER_NAME
   echo 'fi' >> $RESET_DRIVER_NAME
-  echo 'if [ -d /tmp/kafka-logs ]; then' >> $RESET_DRIVER_NAME
-  echo '  sudo rm -rf /tmp/kafka-logs' >> $RESET_DRIVER_NAME
+  echo 'if [ -d /var/kafka-logs ]; then' >> $RESET_DRIVER_NAME
+  echo '  sudo rm -rf /var/kafka-logs' >> $RESET_DRIVER_NAME
   echo 'fi' >> $RESET_DRIVER_NAME
   echo 'echo " - Start daemons"' >> $RESET_DRIVER_NAME
   if [ "$1" = "vm1" ]; then
