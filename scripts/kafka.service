@@ -1,0 +1,16 @@
+[Unit]
+Description=Kafka server (broker)
+Requires=network.target remote-fs.target
+After=network.target remote-fs.target zookeeper.service 
+
+[Service]
+Type=simple
+User=mal
+Group=mal
+Environment=JAVA_HOME=/usr/lib/jvm/jre-1.8.0-openjdk
+ExecStart=/opt/kafka_2.11-0.10.2.0/bin/kafka-server-start.sh /opt/kafka_2.11-0.10.2.0/config/server.properties
+ExecStopr=/opt/kafka_2.11-0.10.2.0/bin/kafka-server-stop.sh
+Restart=on-abort
+
+[Install]
+WantedBy=multi-user.target
