@@ -1,6 +1,6 @@
 
 export CONFIG_DIR=blockr_config
-export DEBUG=false
+export DEBUG=true
 export PREPARE_DRIVER_NAME=prepare_node_driver.sh
 export RESET_DRIVER_NAME=reset_node_driver.sh
 export FABRIC_CFG_PATH=./$CONFIG_DIR
@@ -81,12 +81,10 @@ prepare() {
   echo $TARGET_CFG_PATH >> $PREPARE_DRIVER_NAME
   echo -n 'mkdir ' >> $PREPARE_DRIVER_NAME
   echo $TARGET_CFG_PATH >> $PREPARE_DRIVER_NAME
-  echo 'echo " - Stop CouchDB and Kafka daemons"' >> $PREPARE_DRIVER_NAME
+  echo 'echo " - Stop CouchDB, Zookeeper and Kafka daemons"' >> $PREPARE_DRIVER_NAME
   echo 'sudo /etc/init.d/couchdb stop &> /dev/null' >> $PREPARE_DRIVER_NAME
   echo 'sudo systemctl stop kafka' >> $PREPARE_DRIVER_NAME
-  if [ "$1" = "vm1" ]; then
-    echo 'sudo systemctl stop zookeeper' >> $PREPARE_DRIVER_NAME
-  fi
+  echo 'sudo systemctl stop zookeeper' >> $PREPARE_DRIVER_NAME
   scp -q ./$PREPARE_DRIVER_NAME $1: 
   ssh $1 "chmod 777 $PREPARE_DRIVER_NAME"
   ssh $1 "./$PREPARE_DRIVER_NAME"
@@ -101,19 +99,10 @@ reset() {
   echo " Resetting Node $1"
   echo "----------"
 
-  if [ -d $TEMP1_CFG_PATH ]; then
-    rm -rf $TEMP1_CFG_PATH
-  fi
-  mkdir -p $TEMP1_CFG_PATH
   cp ./templates/server.properties $TEMP1_CFG_PATH/server.properties.template
   cat $TEMP1_CFG_PATH/server.properties.template | sed "s|BROKER_ID|$2| ; s|SERVER_ADDRESS|$1| " > $TEMP1_CFG_PATH/server.properties
   scp -q $TEMP1_CFG_PATH/server.properties $1:/opt/kafka_2.11-0.10.2.0/config 
-  if [ "$1" = "vm1" ]; then
-    cp ./templates/zookeeper.properties $TEMP1_CFG_PATH/zookeeper.properties.template
-    cp $TEMP1_CFG_PATH/zookeeper.properties.template $TEMP1_CFG_PATH/zookeeper.properties
-    scp -q $TEMP1_CFG_PATH/zookeeper.properties $1:/opt/kafka_2.11-0.10.2.0/config 
-  fi
-  rm -rf $TEMP1_CFG_PATH
+  scp -q $TEMP1_CFG_PATH/zookeeper.properties $1:/opt/kafka_2.11-0.10.2.0/config 
 
   echo '#!/bin/bash' > $RESET_DRIVER_NAME
   echo '' >> $RESET_DRIVER_NAME
@@ -133,20 +122,25 @@ reset() {
   echo 'if [ -d /var/zookeeper ]; then' >> $RESET_DRIVER_NAME
   echo '  sudo rm -rf /var/zookeeper' >> $RESET_DRIVER_NAME
   echo 'fi' >> $RESET_DRIVER_NAME
+  echo 'sudo mkdir /var/zookeeper' >> $RESET_DRIVER_NAME
+  echo -n 'sudo echo "' >> $RESET_DRIVER_NAME
+  echo -n $2 >> $RESET_DRIVER_NAME
+  echo '"> ~/myid' >> $RESET_DRIVER_NAME
+  echo 'sudo mv ~/myid /var/zookeeper' >> $RESET_DRIVER_NAME
   echo 'if [ -d /var/kafka-logs ]; then' >> $RESET_DRIVER_NAME
   echo '  sudo rm -rf /var/kafka-logs' >> $RESET_DRIVER_NAME
   echo 'fi' >> $RESET_DRIVER_NAME
-  echo 'echo " - Start daemons"' >> $RESET_DRIVER_NAME
-  if [ "$1" = "vm1" ]; then
-    echo 'sudo systemctl start zookeeper' >> $RESET_DRIVER_NAME
-    if ! [ $WAIT_SECONDS = 0 ]; then
-      echo 'echo " - Wait for Zookeeper to start"' >> $RESET_DRIVER_NAME
-      echo -n 'sleep ' >> $RESET_DRIVER_NAME
-      echo $WAIT_SECONDS >> $RESET_DRIVER_NAME
-      echo 'echo " - Zookeeper started"' >> $RESET_DRIVER_NAME
-    fi
+  echo 'echo " - Start CouchDB"' >> $RESET_DRIVER_NAME
+
+  echo 'sudo systemctl start zookeeper' >> $RESET_DRIVER_NAME
+  if ! [ $WAIT_SECONDS = 0 ]; then
+    echo 'echo " - Wait for Zookeeper to start"' >> $RESET_DRIVER_NAME
+    echo -n 'sleep ' >> $RESET_DRIVER_NAME
+    echo $WAIT_SECONDS >> $RESET_DRIVER_NAME
+    echo 'echo " - Zookeeper started"' >> $RESET_DRIVER_NAME
   fi
   echo 'sudo systemctl start kafka' >> $RESET_DRIVER_NAME
+
   echo 'sudo /etc/init.d/couchdb start &> /dev/null' >> $RESET_DRIVER_NAME
 
   scp -q ./$RESET_DRIVER_NAME $1: 
@@ -166,8 +160,18 @@ echo "'----------------"
 
 prepare vm2
 prepare vm1
+
+if [ -d $TEMP1_CFG_PATH ]; then
+  rm -rf $TEMP1_CFG_PATH
+fi
+mkdir -p $TEMP1_CFG_PATH
+cp ./templates/zookeeper.properties $TEMP1_CFG_PATH
+echo "server.1=vm1:2888:3888" >> $TEMP1_CFG_PATH/zookeeper.properties 
+echo "server.2=vm2:2888:3888" >> $TEMP1_CFG_PATH/zookeeper.properties 
 reset vm1 1
+rm -rf $TEMP1_CFG_PATH/server.properties
 reset vm2 2
+rm -rf $TEMP1_CFG_PATH
 
 echo "----------"
 echo " Reset local configuration directory $FABRIC_CFG_PATH"
