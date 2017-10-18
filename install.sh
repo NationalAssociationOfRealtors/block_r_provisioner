@@ -1,6 +1,5 @@
 #!/bin/bash
 
-CONFIG_DIR="blockr_config"
 FABRIC=$GOPATH/src/github.com/hyperledger/fabric
 PRODUCTION_DIR=/var/hyperledger
 
@@ -20,8 +19,6 @@ mkdir -p $FABRIC
 chown -R $(whoami):$(whoami) $FABRIC
 git clone https://github.com/hyperledger/fabric $FABRIC
 cd $FABRIC
-mkdir $CONFIG_DIR
 make native 
 EOF
 
-#  exit 1
