@@ -93,10 +93,23 @@ peer:
         # If this isn't set, the peer will not be known to other organizations.
         externalEndpoint: PEER_ENDPOINT
         election:
+            # time waitng for stable membership during leader election startup
             startupGracePeriod: 15s
+            # Interval gossip membership samples to check its stabilita
             membershipSampleInterval: 1s
+            # Time before peer decides to perform leader election
             leaderAliveThreshold: 10s
+            # Time until propose message and leader declaration
             leaderElectionDuration: 5s
+        pvtData:
+            # time trying to pull private data before commit without
+            pullRetryThreshold: 60s
+            # minimum number of peers targeted for dissemination.
+            minPeers: 1
+            # maximum number of peers targeted for dissemination
+            maxPeers: 1
+            # maximum difference between the ledger height upon commit
+            transientstoreMaxBlockRetention: 500
     events:
         address: 0.0.0.0:7053
         buffersize: 100
