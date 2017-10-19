@@ -67,9 +67,12 @@ prepare() {
   echo '#----------------' >> $PREPARE_DRIVER_NAME
   echo -n 'export TARGET_CFG_PATH=' >> $PREPARE_DRIVER_NAME 
   echo $TARGET_CFG_PATH >> $PREPARE_DRIVER_NAME 
-  echo 'echo " - Stop Hyperledger daemons"' >> $PREPARE_DRIVER_NAME
+  echo 'echo " - Stop Hyperledger, CouchDB, Zookeeper and Kafka daemons"' >> $PREPARE_DRIVER_NAME
   echo 'sudo pkill orderer' >> $PREPARE_DRIVER_NAME
   echo 'sudo pkill peer' >> $PREPARE_DRIVER_NAME
+  echo 'sudo /etc/init.d/couchdb stop &> /dev/null' >> $PREPARE_DRIVER_NAME
+  echo 'sudo systemctl stop kafka' >> $PREPARE_DRIVER_NAME
+  echo 'sudo systemctl stop zookeeper' >> $PREPARE_DRIVER_NAME
   echo 'echo " - Remove docker images"' >> $PREPARE_DRIVER_NAME
   echo 'sudo docker ps -aq | xargs docker kill &> /dev/null' >> $PREPARE_DRIVER_NAME
   echo 'sudo docker ps -aq | xargs docker rm &> /dev/null' >> $PREPARE_DRIVER_NAME
@@ -81,10 +84,6 @@ prepare() {
   echo $TARGET_CFG_PATH >> $PREPARE_DRIVER_NAME
   echo -n 'mkdir ' >> $PREPARE_DRIVER_NAME
   echo $TARGET_CFG_PATH >> $PREPARE_DRIVER_NAME
-  echo 'echo " - Stop CouchDB, Zookeeper and Kafka daemons"' >> $PREPARE_DRIVER_NAME
-  echo 'sudo /etc/init.d/couchdb stop &> /dev/null' >> $PREPARE_DRIVER_NAME
-  echo 'sudo systemctl stop kafka' >> $PREPARE_DRIVER_NAME
-  echo 'sudo systemctl stop zookeeper' >> $PREPARE_DRIVER_NAME
   scp -q ./$PREPARE_DRIVER_NAME $1: 
   ssh $1 "chmod 777 $PREPARE_DRIVER_NAME"
   ssh $1 "./$PREPARE_DRIVER_NAME"

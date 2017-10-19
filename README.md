@@ -39,7 +39,6 @@ The following primary scripts are included:
 - `install.sh` install Hyperledget Fabric and prepared the server 
 - `install_chaincode.sh` installs chaincode on each node 
 - `provision.sh` performs the provisioning 
-- `resetEnv.sh` sets the local server to its initial state, but does not install Hyperledger Fabric 
 - `reset_nodes.sh` sets the all nodes on the channel to its initial state 
 - `start_nodes.sh` starts both peer and orderer daemons on each node of the system. 
 - `stop_nodes.sh` stops both peer and orderer daemons on each node of the system. 
