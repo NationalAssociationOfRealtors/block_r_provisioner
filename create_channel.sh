@@ -4,43 +4,12 @@ export DEBUG=false
 export DELAY_TIME=60
 export FABRIC_PATH=$GOPATH/src/github.com/hyperledger/fabric
 export FABRIC_CFG_PATH=$FABRIC_PATH/$CONFIG_DIR
-export COPY_BLOCK_DRIVER_NAME=copy_block_driver.sh
 export CREATE_ANCHOR_DRIVER_NAME=create_anchor_driver.sh
 export CREATE_CHANNEL_DRIVER_NAME=create_channel_driver.sh
 export JOIN_CHANNEL_DRIVER_NAME=join_channel_driver.sh
 export WAIT_SECONDS=0
 export WITH_ANCHOR_PEERS=false
 export WITH_TLS=true
-
-copy_block_driver() {
-  echo "----------"
-  echo " Copy channel block from Node $1 to Node $2"
-  echo "----------"
-
-  echo '#!/bin/bash' > $COPY_BLOCK_DRIVER_NAME
-  echo '' >> $COPY_BLOCK_DRIVER_NAME
-  echo '#----------------' >> $COPY_BLOCK_DRIVER_NAME
-  echo '#' >> $COPY_BLOCK_DRIVER_NAME
-  echo '# Block R Create Channel Driver' >> $COPY_BLOCK_DRIVER_NAME
-  echo '#' >> $COPY_BLOCK_DRIVER_NAME
-  echo '#----------------' >> $COPY_BLOCK_DRIVER_NAME
-  echo -n 'export FABRIC_CFG_PATH=' >> $COPY_BLOCK_DRIVER_NAME
-  echo $FABRIC_CFG_PATH >> $COPY_BLOCK_DRIVER_NAME
-  echo -n 'scp -q ' >> $COPY_BLOCK_DRIVER_NAME
-  echo -n $FABRIC_CFG_PATH >> $COPY_BLOCK_DRIVER_NAME
-  echo -n '/blockr.block ' >> $COPY_BLOCK_DRIVER_NAME
-  echo -n $2 >> $COPY_BLOCK_DRIVER_NAME
-  echo -n ':' >> $COPY_BLOCK_DRIVER_NAME
-  echo $FABRIC_CFG_PATH >> $COPY_BLOCK_DRIVER_NAME
-
-  scp -q ./$COPY_BLOCK_DRIVER_NAME $1:
-  ssh $1 "chmod 777 $COPY_BLOCK_DRIVER_NAME"
-  ssh $1 "./$COPY_BLOCK_DRIVER_NAME"
-  if [ "$DEBUG" != true ]; then
-   ssh $1 "rm ./$COPY_BLOCK_DRIVER_NAME"
-  fi
-  rm ./$COPY_BLOCK_DRIVER_NAME
-}
 
 create_channel_driver() {
   echo "----------"
@@ -127,6 +96,14 @@ join_channel_driver() {
   echo -n '/users/Admin@' >> $JOIN_CHANNEL_DRIVER_NAME
   echo -n $3 >> $JOIN_CHANNEL_DRIVER_NAME
   echo '/msp' >> $JOIN_CHANNEL_DRIVER_NAME
+  echo 'echo " - Check if channel is defined"' >> $JOIN_CHANNEL_DRIVER_NAME
+  echo 'if ! [ -f $FABRIC_CFG_PATH/blockr.block ]; then' >> $JOIN_CHANNEL_DRIVER_NAME
+  echo '  echo " - Fetch missing channel definition"' >> $JOIN_CHANNEL_DRIVER_NAME
+  echo -n '  $FABRIC_PATH/build/bin/peer channel fetch config $FABRIC_CFG_PATH/blockr.block -c blockr -o ' >> $JOIN_CHANNEL_DRIVER_NAME
+  echo -n $1 >> $JOIN_CHANNEL_DRIVER_NAME
+  echo -n ':7050 ' >> $JOIN_CHANNEL_DRIVER_NAME
+  echo $ORDERER_TLS >> $JOIN_CHANNEL_DRIVER_NAME
+  echo 'fi' >> $JOIN_CHANNEL_DRIVER_NAME
   echo 'echo " - Join the channel"' >> $JOIN_CHANNEL_DRIVER_NAME
   echo -n '$FABRIC_PATH/build/bin/peer channel join -b $FABRIC_CFG_PATH/blockr.block -o ' >> $JOIN_CHANNEL_DRIVER_NAME
   echo -n $1 >> $JOIN_CHANNEL_DRIVER_NAME
@@ -207,7 +184,6 @@ echo "|"
 echo "'----------------"
 
 create_channel_driver vm1 Org1MSP nar.blockr
-copy_block_driver vm1 vm2 
 join_channel_driver vm1 Org1MSP nar.blockr
 join_channel_driver vm2 Org2MSP car.blockr
 if [ "$WITH_ANCHOR_PEERS" = true ]; then
