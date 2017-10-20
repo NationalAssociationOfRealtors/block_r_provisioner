@@ -49,7 +49,7 @@ create_channel_driver() {
 
   ORDERER_TLS=''
   if [ "$WITH_TLS" = true ]; then
-    ORDERER_TLS=" --tls true --cafile $FABRIC_CFG_PATH/ordererOrganizations/$3/orderers/$1.$3/tls/ca.crt"
+    ORDERER_TLS=" --tls --cafile $FABRIC_CFG_PATH/ordererOrganizations/$3/orderers/$1.$3/tls/ca.crt"
   fi
   echo '#!/bin/bash' > $CREATE_CHANNEL_DRIVER_NAME
   echo '' >> $CREATE_CHANNEL_DRIVER_NAME
@@ -107,7 +107,7 @@ join_channel_driver() {
 
   ORDERER_TLS=''
   if [ "$WITH_TLS" = true ]; then
-    ORDERER_TLS=" --tls true --cafile $FABRIC_CFG_PATH/ordererOrganizations/$3/orderers/$1.$3/tls/ca.crt"
+    ORDERER_TLS=" --tls --cafile $FABRIC_CFG_PATH/ordererOrganizations/$3/orderers/$1.$3/tls/ca.crt"
   fi
   echo '#!/bin/bash' > $JOIN_CHANNEL_DRIVER_NAME
   echo '' >> $JOIN_CHANNEL_DRIVER_NAME
@@ -156,7 +156,7 @@ anchor_peer_driver() {
 
   ORDERER_TLS=''
   if [ "$WITH_TLS" = true ]; then
-    ORDERER_TLS=" --tls true --cafile $FABRIC_CFG_PATH/ordererOrganizations/$3/orderers/$1.$3/tls/ca.crt"
+    ORDERER_TLS=" --tls --cafile $FABRIC_CFG_PATH/ordererOrganizations/$3/orderers/$1.$3/tls/ca.crt"
   fi
   echo '#!/bin/bash' > $CREATE_CHANNEL_DRIVER_NAME
   echo '' >> $CREATE_CHANNEL_DRIVER_NAME

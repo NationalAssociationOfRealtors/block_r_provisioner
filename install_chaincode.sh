@@ -17,7 +17,7 @@ distribute_chaincode_install_driver() {
 
   ORDERER_TLS=''
   if [ "$WITH_TLS" = true ]; then
-    ORDERER_TLS="--tls true --cafile $FABRIC_CFG_PATH/ordererOrganizations/$2/orderers/$1.$2/tls/ca.crt"
+    ORDERER_TLS="--tls --cafile $FABRIC_CFG_PATH/ordererOrganizations/$2/orderers/$1.$2/tls/ca.crt"
   fi
 
   echo '#!/bin/bash' > $INSTALL_DRIVER_NAME
@@ -64,7 +64,7 @@ distribute_chaincode_instantiate_driver() {
 
   ORDERER_TLS=''
   if [ "$WITH_TLS" = true ]; then
-    ORDERER_TLS="--tls true --cafile $FABRIC_CFG_PATH/ordererOrganizations/$2/orderers/$1.$2/tls/ca.crt"
+    ORDERER_TLS="--tls --cafile $FABRIC_CFG_PATH/ordererOrganizations/$2/orderers/$1.$2/tls/ca.crt"
   fi
 
   export CHAINCODE_ARGS='{"Args":["init","a","100","b","200"]}'
