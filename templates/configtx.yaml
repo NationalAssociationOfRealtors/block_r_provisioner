@@ -38,21 +38,18 @@ Organizations:
     AdminPrincipal: Role.ADMIN
 #    AdminPrincipal: Role.MEMBER
     MSPDir: ordererOrganizations/nar.blockr/msp 
-#    MSPDir: ordererOrganizations/nar.blockr/orderers/vm1.nar.blockr/msp 
   - &OrdererOrg2
     Name: Orderer2MSP
     ID: Orderer2MSP
     AdminPrincipal: Role.ADMIN
 #    AdminPrincipal: Role.MEMBER
     MSPDir: ordererOrganizations/car.blockr/msp
-#    MSPDir: ordererOrganizations/car.blockr/orderers/vm2.car.blockr/msp 
   - &Org1
     Name: Org1MSP
     ID: Org1MSP
     AdminPrincipal: Role.ADMIN
 #    AdminPrincipal: Role.MEMBER
     MSPDir: peerOrganizations/nar.blockr/msp 
-#    MSPDir: peerOrganizations/nar.blockr/peers/vm1.nar.blockr/msp 
     AnchorPeers:
       - Host: vm1
         Port: 7051
@@ -62,12 +59,10 @@ Organizations:
     AdminPrincipal: Role.ADMIN
 #    AdminPrincipal: Role.MEMBER
     MSPDir: peerOrganizations/car.blockr/msp 
-#    MSPDir: peerOrganizations/car.blockr/peers/vm2.car.blockr/msp 
     AnchorPeers:
       - Host: vm2
         Port: 7051
 Orderer: &OrdererDefaults
-#  OrdererType: solo
   OrdererType: kafka 
   Addresses:
     - vm1:7050
