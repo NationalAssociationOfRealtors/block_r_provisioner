@@ -9,7 +9,6 @@ export PRODUCTION_DIR=/var/hyperledger
 export TARGET_CFG_PATH=$FABRIC_PATH/$CONFIG_DIR
 export TEMP_CFG_PATH=./$CONFIG_DIR.temp
 export TEMP1_CFG_PATH=./$CONFIG_DIR.temp1
-export WAIT_SECONDS=0
 export WITH_ANCHOR_PEERS=false
 export WITH_TLS=true
 
@@ -70,7 +69,7 @@ prepare() {
   echo 'echo " - Stop Hyperledger, CouchDB, Zookeeper and Kafka daemons"' >> $PREPARE_DRIVER_NAME
   echo 'sudo pkill orderer' >> $PREPARE_DRIVER_NAME
   echo 'sudo pkill peer' >> $PREPARE_DRIVER_NAME
-  echo 'sudo /etc/init.d/couchdb stop &> /dev/null' >> $PREPARE_DRIVER_NAME
+  echo 'sudo systemctl stop couchdb' >> $PREPARE_DRIVER_NAME
   echo 'sudo systemctl stop kafka' >> $PREPARE_DRIVER_NAME
   echo 'sudo systemctl stop zookeeper' >> $PREPARE_DRIVER_NAME
   echo 'echo " - Remove docker images"' >> $PREPARE_DRIVER_NAME
@@ -128,16 +127,6 @@ reset() {
   echo 'if [ -d /var/kafka-logs ]; then' >> $RESET_DRIVER_NAME
   echo '  sudo rm -rf /var/kafka-logs' >> $RESET_DRIVER_NAME
   echo 'fi' >> $RESET_DRIVER_NAME
-  echo 'echo " - Start CouchDB, Zookeeper and Kafka daemons"' >> $RESET_DRIVER_NAME
-  echo 'sudo systemctl start zookeeper' >> $RESET_DRIVER_NAME
-  if ! [ $WAIT_SECONDS = 0 ]; then
-    echo 'echo " - Wait for Zookeeper to start"' >> $RESET_DRIVER_NAME
-    echo -n 'sleep ' >> $RESET_DRIVER_NAME
-    echo $WAIT_SECONDS >> $RESET_DRIVER_NAME
-    echo 'echo " - Zookeeper started"' >> $RESET_DRIVER_NAME
-  fi
-  echo 'sudo systemctl start kafka' >> $RESET_DRIVER_NAME
-  echo 'sudo /etc/init.d/couchdb start &> /dev/null' >> $RESET_DRIVER_NAME
 
   scp -q ./$RESET_DRIVER_NAME $1: 
   ssh $1 "chmod 777 $RESET_DRIVER_NAME"
