@@ -40,13 +40,14 @@ The following primary scripts can be found in the root directory:
 - `install_chaincode.sh` - installs chaincode on each node 
 - `provision.sh` - performs the provisioning 
 - `reset_nodes.sh` - sets the all nodes on the channel to its initial state 
+- `run.sh` - interactive shell to run scripts 
 - `start_nodes.sh` - starts both peer and orderer daemons on each node of the system. 
 - `stop_nodes.sh` - stops both peer and orderer daemons on each node of the system. 
 
 There is also a `scripts` directory that contains:
 
-- `kafka.service` - systemd service for Kafka
 - `invoke.sh` - used to modify contents of the edger for testing
+- `kafka.service` - systemd service for Kafka
 - `list_channels.sh` - lists the channels that the peer is subscribed to 
 - `query.sh` - used to inspect the contents of the ledger during testing
 - `zookeeper.service` - systemd service for Zookeeper 
@@ -64,6 +65,8 @@ Configuration files are found in the `templates` directory:
 
 **Operation**
 
+You can either execute scripts from the `run.sh` interactive script or run them individually.  If you run them individually, read the rest of this section carefully.
+
 Here is the sequence of operations neeeded to install a network.  It is important that theses scripts are run in order.  They have been designed to capture particularly sensitive sequences inside of scripts to avoid probles.  For instance, the sequence of operations needed to bring up Zookeeper, Kafka and CouchDB daemons is sensitive and thus are contained with the `provision.sh` script: 
 
 - `reset_nodes.sh` - ensures there are no artifacts remaining on any of the nodes.
@@ -75,7 +78,7 @@ Here is the sequence of operations neeeded to install a network.  It is importan
   - defines the peer as an `AnchorPeer` to facilitate Hyperledger gossip communications 
 - `install_chaincode.sh` - installs chaincode on each.
 
-After installation, each node can be tested using the `query.sh` and `invoke.sh` scripts.
+Once the nodes are running, each node can be tested using the `query.sh` and `invoke.sh` scripts.
 
 When you are done testing, use the `stop_nodes.sh` script to stop the nodes.  
 

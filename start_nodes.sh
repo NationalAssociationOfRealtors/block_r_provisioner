@@ -131,7 +131,6 @@ start_node_driver() {
   rm ./$ORDERER_DRIVER_NAME
 }
 
-
 echo ".----------------"
 echo "|"
 echo "| Block R Provisoner"
