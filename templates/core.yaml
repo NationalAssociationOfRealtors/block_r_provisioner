@@ -207,4 +207,3 @@ ledger:
     queryLimit: 10000
   history:
     enableHistoryDatabase: true
-

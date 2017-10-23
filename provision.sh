@@ -9,8 +9,15 @@ export PRODUCTION_DIR=/var/hyperledger
 export TARGET_CFG_PATH=$FABRIC_PATH/$CONFIG_DIR
 export TEMP_CFG_PATH=./$CONFIG_DIR.temp
 export TEMP1_CFG_PATH=./$CONFIG_DIR.temp1
-export WITH_ANCHOR_PEERS=false
+export WITH_ANCHOR_PEERS=true
 export WITH_TLS=true
+
+createAnchor() {
+  $FABRIC_PATH/build/bin/configtxgen -profile Channels -outputAnchorPeersUpdate $FABRIC_CFG_PATH/$1anchor.tx -channelID blockr -asOrg $1 
+  if ! [ -f $FABRIC_CFG_PATH/$1anchor.tx ]; then
+    echo "ERROR failed to create Anchor Peer Transaction for $1"
+  fi
+}
 
 distribute_conf() {
   echo "----------"
@@ -190,20 +197,14 @@ if ! [ -f $FABRIC_CFG_PATH/blockr.tx ]; then
 fi
 
 if [ "$WITH_ANCHOR_PEERS" = true ]; then
-  echo "----------"
-  echo " Generate Anchorpeer transactions from $FABRIC_CFG_PATH/configtx.yaml, profile:Channels"
-  echo "----------"
-  $FABRIC_PATH/build/bin/configtxgen -profile Channels -outputAnchorPeersUpdate $FABRIC_CFG_PATH/Org1MSPanchors.tx -channelID blockr -asOrg Org1MSP
-  if ! [ -f $FABRIC_CFG_PATH/Org1MSPanchors.tx ]; then
-    echo 'ERROR'
-    exit 1
-  fi
 
-  $FABRIC_PATH/build/bin/configtxgen -profile Channels -outputAnchorPeersUpdate $FABRIC_CFG_PATH/Org2MSPanchors.tx -channelID blockr -asOrg Org2MSP
-  if ! [ -f $FABRIC_CFG_PATH/Org2MSPanchors.tx ]; then
-    echo 'ERROR'
-    exit 1
-  fi
+  echo "----------"
+  echo " Generate AnchorPeer transactions from $FABRIC_CFG_PATH/configtx.yaml, profile:Channels"
+  echo "----------"
+
+  createAnchor Org1MSP
+  createAnchor Org2MSP
+
 fi
 
 distribute_conf vm1 Org1MSP nar.blockr Orderer1MSP 0
