@@ -126,4 +126,3 @@ Kafka:
         # following "File" key and specify the file name from which to load the
         # value of RootCAs.
         #File: path/to/RootCAs
-        
