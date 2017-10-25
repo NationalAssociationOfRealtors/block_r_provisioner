@@ -24,10 +24,10 @@ start_zookeeper() {
   echo '#----------------' >> $START_ZOOKEEPER_DRIVER_NAME
   echo 'echo -n " - "' >> $START_ZOOKEEPER_DRIVER_NAME
   echo 'if $(/usr/bin/systemctl -q is-active zookeeper) ; then' >> $START_ZOOKEEPER_DRIVER_NAME
-  echo '  echo "Already running."' >> $START_ZOOKEEPER_DRIVER_NAME
+  echo '  echo "Already running"' >> $START_ZOOKEEPER_DRIVER_NAME
   echo 'else' >> $START_ZOOKEEPER_DRIVER_NAME
   echo '  sudo systemctl start zookeeper' >> $START_ZOOKEEPER_DRIVER_NAME
-  echo '  echo "Started."' >> $START_ZOOKEEPER_DRIVER_NAME
+  echo '  echo "Started"' >> $START_ZOOKEEPER_DRIVER_NAME
 #  if ! [ $WAIT_SECONDS = 0 ]; then
 #    echo 'echo "   - Wait for Zookeeper to start"' >> $START_ZOOKEEPER_DRIVER_NAME
 #    echo -n 'sleep ' >> $START_ZOOKEEPER_DRIVER_NAME
@@ -63,7 +63,7 @@ start_daemons() {
 
   echo 'start_daemon() {' >> $START_DAEMON_DRIVER_NAME
   echo '  if $(/usr/bin/systemctl -q is-active $1) ; then' >> $START_DAEMON_DRIVER_NAME
-  echo '    echo "- Already running."' >> $START_DAEMON_DRIVER_NAME
+  echo '    echo "- Already running"' >> $START_DAEMON_DRIVER_NAME
   echo '  else' >> $START_DAEMON_DRIVER_NAME
   echo '    sudo systemctl start $1' >> $START_DAEMON_DRIVER_NAME
   if ! [ $WAIT_SECONDS = 0 ]; then
@@ -77,7 +77,7 @@ start_daemons() {
   echo '    else' >> $START_DAEMON_DRIVER_NAME
   echo '      if [ $COUNTER -le $MAX_RETRIES ] ; then' >> $START_DAEMON_DRIVER_NAME
   echo '        ((COUNTER++))' >> $START_DAEMON_DRIVER_NAME
-  echo '        echo "Failed to start, retry."' >> $START_DAEMON_DRIVER_NAME
+  echo '        echo "Failed to start, retry"' >> $START_DAEMON_DRIVER_NAME
   echo '        echo -n "           "' >> $START_DAEMON_DRIVER_NAME
   echo '        start_daemon $1' >> $START_DAEMON_DRIVER_NAME
   echo '      fi' >> $START_DAEMON_DRIVER_NAME
