@@ -1,15 +1,17 @@
 
 export CONFIG_DIR=blockr_config
 export DEBUG=false
-export PREPARE_DRIVER_NAME=prepare_node_driver.sh
-export RESET_DRIVER_NAME=reset_node_driver.sh
 export FABRIC_CFG_PATH=./$CONFIG_DIR
 export FABRIC_PATH=$GOPATH/src/github.com/hyperledger/fabric
-export PRODUCTION_DIR=/var/hyperledger
+export KAFKA_DIR=/var/kafka-logs
+export HYPERLEDGER_DIR=/var/hyperledger
+export PREPARE_DRIVER_NAME=prepare_node_driver.sh
+export RESET_DRIVER_NAME=reset_node_driver.sh
 export TARGET_CFG_PATH=$FABRIC_PATH/$CONFIG_DIR
 export TEMP_CFG_PATH=./$CONFIG_DIR.temp
 export WITH_ANCHOR_PEERS=true
 export WITH_TLS=true
+export ZOOKEEPER_DIR=/var/zookeeper
 
 createAnchor() {
   $FABRIC_PATH/build/bin/configtxgen -profile Channels -outputAnchorPeersUpdate $FABRIC_CFG_PATH/$1anchor.tx -channelID blockr -asOrg $1 
@@ -82,13 +84,9 @@ prepare() {
   echo 'sudo docker ps -aq | xargs docker kill &> /dev/null' >> $PREPARE_DRIVER_NAME
   echo 'sudo docker ps -aq | xargs docker rm &> /dev/null' >> $PREPARE_DRIVER_NAME
   echo "sudo docker images | grep 'dev-' | awk '{print $3}' | xargs docker rmi &> /dev/null" >> $PREPARE_DRIVER_NAME
-  echo -n 'echo " - Reset configuration ' >> $PREPARE_DRIVER_NAME
-  echo -n $TARGET_CFG_PATH >> $PREPARE_DRIVER_NAME
-  echo '"' >> $PREPARE_DRIVER_NAME
-  echo -n 'rm -rf ' >> $PREPARE_DRIVER_NAME
-  echo $TARGET_CFG_PATH >> $PREPARE_DRIVER_NAME
-  echo -n 'mkdir ' >> $PREPARE_DRIVER_NAME
-  echo $TARGET_CFG_PATH >> $PREPARE_DRIVER_NAME
+  echo 'echo " - Reset configuration $TARGET_CFG_PATH"' >> $PREPARE_DRIVER_NAME
+  echo 'rm -rf $TARGET_CFG_PATH' >> $PREPARE_DRIVER_NAME
+  echo 'mkdir $TARGET_CFG_PATH' >> $PREPARE_DRIVER_NAME
   scp -q ./$PREPARE_DRIVER_NAME $1: 
   ssh $1 "chmod 777 $PREPARE_DRIVER_NAME"
   ssh $1 "./$PREPARE_DRIVER_NAME"
@@ -114,24 +112,28 @@ reset() {
   echo '# Block R Reset Driver' >> $RESET_DRIVER_NAME
   echo '#' >> $RESET_DRIVER_NAME
   echo '#----------------' >> $RESET_DRIVER_NAME
-  echo -n 'export PRODUCTION_DIR=' >> $RESET_DRIVER_NAME 
-  echo $PRODUCTION_DIR >> $RESET_DRIVER_NAME 
+  echo -n 'export HYPERLEDGER_DIR=' >> $RESET_DRIVER_NAME 
+  echo $HYPERLEDGER_DIR >> $RESET_DRIVER_NAME 
+  echo -n 'export KAFKA_DIR=' >> $RESET_DRIVER_NAME 
+  echo $KAFKA_DIR >> $RESET_DRIVER_NAME 
+  echo -n 'export ZOOKEEPER_DIR=' >> $RESET_DRIVER_NAME 
+  echo $ZOOKEEPER_DIR >> $RESET_DRIVER_NAME 
   echo 'echo " - Reset production repositories"' >> $RESET_DRIVER_NAME
-  echo 'if [ -d $PRODUCTION_DIR ]; then' >> $RESET_DRIVER_NAME
-  echo '  sudo rm -rf $PRODUCTION_DIR' >> $RESET_DRIVER_NAME
+  echo 'if [ -d $HYPERLEDGER_DIR ]; then' >> $RESET_DRIVER_NAME
+  echo '  sudo rm -rf $HYPERLEDGER_DIR' >> $RESET_DRIVER_NAME
   echo 'fi' >> $RESET_DRIVER_NAME
-  echo 'sudo mkdir $PRODUCTION_DIR' >> $RESET_DRIVER_NAME
-  echo 'sudo chown $(whoami):$(whoami) $PRODUCTION_DIR' >> $RESET_DRIVER_NAME
-  echo 'if [ -d /var/zookeeper ]; then' >> $RESET_DRIVER_NAME
-  echo '  sudo rm -rf /var/zookeeper' >> $RESET_DRIVER_NAME
+  echo 'sudo mkdir $HYPERLEDGER_DIR' >> $RESET_DRIVER_NAME
+  echo 'sudo chown $(whoami):$(whoami) $HYPERLEDGER_DIR' >> $RESET_DRIVER_NAME
+  echo 'if [ -d $ZOOKEEPER_DIR ]; then' >> $RESET_DRIVER_NAME
+  echo '  sudo rm -rf $ZOOKEEPER_DIR' >> $RESET_DRIVER_NAME
   echo 'fi' >> $RESET_DRIVER_NAME
-  echo 'sudo mkdir /var/zookeeper' >> $RESET_DRIVER_NAME
+  echo 'sudo mkdir $ZOOKEEPER_DIR' >> $RESET_DRIVER_NAME
   echo -n 'sudo echo "' >> $RESET_DRIVER_NAME
   echo -n $2 >> $RESET_DRIVER_NAME
   echo '"> ~/myid' >> $RESET_DRIVER_NAME
-  echo 'sudo mv ~/myid /var/zookeeper' >> $RESET_DRIVER_NAME
-  echo 'if [ -d /var/kafka-logs ]; then' >> $RESET_DRIVER_NAME
-  echo '  sudo rm -rf /var/kafka-logs' >> $RESET_DRIVER_NAME
+  echo 'sudo mv ~/myid $ZOOKEEPER_DIR' >> $RESET_DRIVER_NAME
+  echo 'if [ -d $KAFKA_DIR ]; then' >> $RESET_DRIVER_NAME
+  echo '  sudo rm -rf $KAFKA_DIR' >> $RESET_DRIVER_NAME
   echo 'fi' >> $RESET_DRIVER_NAME
 
   scp -q ./$RESET_DRIVER_NAME $1: 
