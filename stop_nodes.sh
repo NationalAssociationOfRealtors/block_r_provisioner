@@ -1,6 +1,7 @@
 
 export DEBUG=false
 export STOP_DAEMON_DRIVER_NAME=stop_daemon_driver.sh
+export STOP_NODE_DRIVER_NAME=stop_node_driver.sh
 export STOP_ZOOKEEPER_DRIVER_NAME=stop_zookeeper_driver.sh
 
 shutdown_node() {
@@ -8,10 +9,28 @@ shutdown_node() {
   echo " Shutdown Node $1"
   echo "----------"
 
-  echo " - Orderer"
-  ssh $1 "pkill orderer"
-  echo " - Peer"
-  ssh $1 "pkill peer"
+  echo '#!/bin/bash' > $STOP_NODE_DRIVER_NAME
+  echo '' >> $STOP_NODE_DRIVER_NAME
+  echo '#----------------' >> $STOP_NODE_DRIVER_NAME
+  echo '#' >> $STOP_NODE_DRIVER_NAME
+  echo '# Block R Stop Node Driver' >> $STOP_NODE_DRIVER_NAME
+  echo '#' >> $STOP_NODE_DRIVER_NAME
+  echo '#----------------' >> $STOP_NODE_DRIVER_NAME
+
+  echo 'echo -n " - Orderer "' >> $STOP_NODE_DRIVER_NAME
+  echo 'sudo pkill orderer' >> $STOP_NODE_DRIVER_NAME
+  echo 'echo "- Stopped"' >> $STOP_NODE_DRIVER_NAME
+  echo 'echo -n " - Peer "' >> $STOP_NODE_DRIVER_NAME
+  echo 'sudo pkill peer' >> $STOP_NODE_DRIVER_NAME
+  echo 'echo "- Stopped"' >> $STOP_NODE_DRIVER_NAME
+
+  scp -q ./$STOP_NODE_DRIVER_NAME $1: 
+  ssh $1 "chmod 777 $STOP_NODE_DRIVER_NAME"
+  ssh $1 "./$STOP_NODE_DRIVER_NAME"
+  if [ "$DEBUG" != true ]; then
+    ssh $1 "rm ./$STOP_NODE_DRIVER_NAME"
+  fi
+  rm ./$STOP_NODE_DRIVER_NAME
 }
 
 shutdown_daemons() {
