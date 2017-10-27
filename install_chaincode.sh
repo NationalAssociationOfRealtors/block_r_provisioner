@@ -40,13 +40,16 @@ distribute_chaincode_install_driver() {
   echo '/msp' >> $INSTALL_DRIVER_NAME
   echo -n 'export GOPATH=' >> $INSTALL_DRIVER_NAME
   echo $GOPATH >> $INSTALL_DRIVER_NAME
+  echo -n 'export ORDERER_TLS="' >> $INSTALL_DRIVER_NAME
+  echo -n $ORDERER_TLS >> $INSTALL_DRIVER_NAME
+  echo '"' >> $INSTALL_DRIVER_NAME
   echo -n '$FABRIC_PATH/build/bin/peer chaincode install -n ' >> $INSTALL_DRIVER_NAME
   echo -n $CHAINCODE_ID >> $INSTALL_DRIVER_NAME
   echo -n ' -p ' >> $INSTALL_DRIVER_NAME
   echo -n $CHAINCODE_PATH >> $INSTALL_DRIVER_NAME
   echo -n ' -o ' >> $INSTALL_DRIVER_NAME
   echo -n $1 >> $INSTALL_DRIVER_NAME
-  echo ':7050' >> $INSTALL_DRIVER_NAME
+  echo ':7050 $ORDERER_TLS' >> $INSTALL_DRIVER_NAME
 
   scp -q ./$INSTALL_DRIVER_NAME $1:
   ssh $1 "chmod 777 $INSTALL_DRIVER_NAME"
@@ -89,6 +92,9 @@ distribute_chaincode_instantiate_driver() {
   echo '/msp/' >> $INSTANTIATE_DRIVER_NAME
   echo -n 'export GOPATH=' >> $INSTANTIATE_DRIVER_NAME
   echo $GOPATH >> $INSTANTIATE_DRIVER_NAME
+  echo -n 'export ORDERER_TLS="' >> $INSTANTIATE_DRIVER_NAME
+  echo -n $ORDERER_TLS >> $INSTANTIATE_DRIVER_NAME
+  echo '"' >> $INSTANTIATE_DRIVER_NAME
   echo -n '$FABRIC_PATH/build/bin/peer chaincode instantiate -n ' >> $INSTANTIATE_DRIVER_NAME
   echo -n $CHAINCODE_ID >> $INSTANTIATE_DRIVER_NAME
   echo -n " -C blockr -c '" >> $INSTANTIATE_DRIVER_NAME
@@ -102,8 +108,7 @@ distribute_chaincode_instantiate_driver() {
 
   echo -n '-o ' >> $INSTANTIATE_DRIVER_NAME
   echo -n $1 >> $INSTANTIATE_DRIVER_NAME
-  echo -n ':7050 ' >> $INSTANTIATE_DRIVER_NAME
-  echo $ORDERER_TLS >> $INSTANTIATE_DRIVER_NAME
+  echo ':7050 $ORDERER_TLS' >> $INSTANTIATE_DRIVER_NAME
   if ! [ $WAIT_SECONDS = 0 ]; then
     echo 'echo " - Wait for Kafka to complete"' >> $INSTANTIATE_DRIVER_NAME
     echo -n "sleep " >> $INSTANTIATE_DRIVER_NAME
