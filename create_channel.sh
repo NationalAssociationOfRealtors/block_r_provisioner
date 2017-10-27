@@ -66,7 +66,7 @@ create_channel_driver() {
   echo '  echo ERROR' >> $CREATE_CHANNEL_DRIVER_NAME
   echo '  exit 1' >> $CREATE_CHANNEL_DRIVER_NAME
   echo 'fi' >> $CREATE_CHANNEL_DRIVER_NAME
-  echo 'mv blockr.block $FABRIC_CFG_PATH' >> $CREATE_CHANNEL_DRIVER_NAME
+ echo 'mv blockr.block $FABRIC_CFG_PATH' >> $CREATE_CHANNEL_DRIVER_NAME
 
   scp -q ./$CREATE_CHANNEL_DRIVER_NAME $1:
   ssh $1 "chmod 777 $CREATE_CHANNEL_DRIVER_NAME"
@@ -121,7 +121,7 @@ join_channel_driver() {
   echo 'rm joined_channels.txt' >> $JOIN_CHANNEL_DRIVER_NAME
   echo 'if ! [ -f $FABRIC_CFG_PATH/blockr.block ]; then' >> $JOIN_CHANNEL_DRIVER_NAME
   echo '  echo " - Fetch missing channel definition"' >> $JOIN_CHANNEL_DRIVER_NAME
-  echo -n '  $FABRIC_PATH/build/bin/peer channel fetch config $FABRIC_CFG_PATH/blockr.block -c blockr -o ' >> $JOIN_CHANNEL_DRIVER_NAME
+  echo -n '  $FABRIC_PATH/build/bin/peer channel fetch 0 $FABRIC_CFG_PATH/blockr.block -c blockr -o ' >> $JOIN_CHANNEL_DRIVER_NAME
   echo -n $1 >> $JOIN_CHANNEL_DRIVER_NAME
   echo ':7050 $ORDERER_TLS' >> $JOIN_CHANNEL_DRIVER_NAME
   echo 'fi' >> $JOIN_CHANNEL_DRIVER_NAME
@@ -158,5 +158,8 @@ echo "|"
 echo "'----------------"
 
 create_channel_driver vm1 Org1MSP nar.blockr
+#scp vm1:$FABRIC_CFG_PATH/blockr.block .  
+#scp blockr.block vm2:$FABRIC_CFG_PATH/
 join_channel_driver vm1 Org1MSP nar.blockr
 join_channel_driver vm2 Org2MSP car.blockr
+
