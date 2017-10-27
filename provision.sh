@@ -9,7 +9,7 @@ export PREPARE_DRIVER_NAME=prepare_node_driver.sh
 export RESET_DRIVER_NAME=reset_node_driver.sh
 export TARGET_CFG_PATH=$FABRIC_PATH/$CONFIG_DIR
 export TEMP_CFG_PATH=./$CONFIG_DIR.temp
-export WITH_ANCHOR_PEERS=true
+export WITH_ANCHOR_PEERS=false
 export WITH_TLS=true
 export ZOOKEEPER_DIR=/var/zookeeper
 
