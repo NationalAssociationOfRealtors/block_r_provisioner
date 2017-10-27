@@ -8,7 +8,6 @@ export FABRIC_PATH=$GOPATH/src/github.com/hyperledger/fabric
 export PRODUCTION_DIR=/var/hyperledger
 export TARGET_CFG_PATH=$FABRIC_PATH/$CONFIG_DIR
 export TEMP_CFG_PATH=./$CONFIG_DIR.temp
-export TEMP1_CFG_PATH=./$CONFIG_DIR.temp1
 export WITH_ANCHOR_PEERS=true
 export WITH_TLS=true
 
@@ -104,10 +103,10 @@ reset() {
   echo " Resetting Node $1"
   echo "----------"
 
-  cp ./templates/server.properties $TEMP1_CFG_PATH/server.properties.template
-  cat $TEMP1_CFG_PATH/server.properties.template | sed "s|BROKER_ID|$2| ; s|SERVER_ADDRESS|$1| " > $TEMP1_CFG_PATH/server.properties
-  scp -q $TEMP1_CFG_PATH/server.properties $1:/opt/kafka_2.11-0.10.2.0/config 
-  scp -q $TEMP1_CFG_PATH/zookeeper.properties $1:/opt/kafka_2.11-0.10.2.0/config 
+  cp ./templates/server.properties $TEMP_CFG_PATH/server.properties.template
+  cat $TEMP_CFG_PATH/server.properties.template | sed "s|BROKER_ID|$2| ; s|SERVER_ADDRESS|$1| " > $TEMP_CFG_PATH/server.properties
+  scp -q $TEMP_CFG_PATH/server.properties $1:/opt/kafka_2.11-0.10.2.0/config 
+  scp -q $TEMP_CFG_PATH/zookeeper.properties $1:/opt/kafka_2.11-0.10.2.0/config 
   echo '#!/bin/bash' > $RESET_DRIVER_NAME
   echo '' >> $RESET_DRIVER_NAME
   echo '#----------------' >> $RESET_DRIVER_NAME
@@ -153,17 +152,17 @@ echo "'----------------"
 prepare vm2
 prepare vm1
 
-if [ -d $TEMP1_CFG_PATH ]; then
-  rm -rf $TEMP1_CFG_PATH
+if [ -d $TEMP_CFG_PATH ]; then
+  rm -rf $TEMP_CFG_PATH
 fi
-mkdir -p $TEMP1_CFG_PATH
-cp ./templates/zookeeper.properties $TEMP1_CFG_PATH
-echo "server.1=vm1:2888:3888" >> $TEMP1_CFG_PATH/zookeeper.properties 
-echo "server.2=vm2:2888:3888" >> $TEMP1_CFG_PATH/zookeeper.properties 
+mkdir -p $TEMP_CFG_PATH
+cp ./templates/zookeeper.properties $TEMP_CFG_PATH
+echo "server.1=vm1:2888:3888" >> $TEMP_CFG_PATH/zookeeper.properties 
+echo "server.2=vm2:2888:3888" >> $TEMP_CFG_PATH/zookeeper.properties 
 reset vm1 1
-rm -rf $TEMP1_CFG_PATH/server.properties
+rm -rf $TEMP_CFG_PATH/server.properties
 reset vm2 2
-rm -rf $TEMP1_CFG_PATH
+rm -rf $TEMP_CFG_PATH
 
 echo "----------"
 echo " Reset local configuration directory $FABRIC_CFG_PATH"
