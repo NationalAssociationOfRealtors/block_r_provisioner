@@ -62,10 +62,6 @@ shutdown_daemons() {
 }
  
 shutdown_zookeeper() {
-  echo "----------"
-  echo " Stopping Zookeeper on $1"
-  echo "----------"
-
   echo '#!/bin/bash' > $STOP_ZOOKEEPER_DRIVER_NAME
   echo '' >> $STOP_ZOOKEEPER_DRIVER_NAME
   echo '#----------------' >> $STOP_ZOOKEEPER_DRIVER_NAME
@@ -73,8 +69,9 @@ shutdown_zookeeper() {
   echo '# Block R Stop Zookeeper Driver' >> $STOP_ZOOKEEPER_DRIVER_NAME
   echo '#' >> $STOP_ZOOKEEPER_DRIVER_NAME
   echo '#----------------' >> $STOP_ZOOKEEPER_DRIVER_NAME
-
-  echo 'echo -n " - "' >> $STOP_ZOOKEEPER_DRIVER_NAME
+  echo -n 'echo -n " - ' >> $STOP_ZOOKEEPER_DRIVER_NAME
+  echo -n $1 >> $STOP_ZOOKEEPER_DRIVER_NAME
+  echo ' - "' >> $STOP_ZOOKEEPER_DRIVER_NAME
   echo 'if $(/usr/bin/systemctl -q is-active zookeeper) ; then' >> $STOP_ZOOKEEPER_DRIVER_NAME
   echo '  sudo systemctl stop zookeeper' >> $STOP_ZOOKEEPER_DRIVER_NAME
   echo '  echo "Stopped"' >> $STOP_ZOOKEEPER_DRIVER_NAME
@@ -103,5 +100,8 @@ shutdown_node vm1
 shutdown_daemons vm2
 shutdown_daemons vm1
 
+echo "----------"
+echo " Stopping Zookeeper"
+echo "----------"
 shutdown_zookeeper vm2
 shutdown_zookeeper vm1

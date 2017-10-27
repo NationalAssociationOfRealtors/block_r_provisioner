@@ -11,10 +11,6 @@ export START_ZOOKEEPER_DRIVER_NAME=start_zookeeper_driver.sh
 export WAIT_SECONDS=5
 
 start_zookeeper() {
-  echo "----------"
-  echo " Starting Zookeeper on Node $1"
-  echo "----------"
-
   echo '#!/bin/bash' > $START_ZOOKEEPER_DRIVER_NAME
   echo '' >> $START_ZOOKEEPER_DRIVER_NAME
   echo '#----------------' >> $START_ZOOKEEPER_DRIVER_NAME
@@ -22,18 +18,14 @@ start_zookeeper() {
   echo '# Block R Start Zookeeper Driver' >> $START_ZOOKEEPER_DRIVER_NAME
   echo '#' >> $START_ZOOKEEPER_DRIVER_NAME
   echo '#----------------' >> $START_ZOOKEEPER_DRIVER_NAME
-  echo 'echo -n " - "' >> $START_ZOOKEEPER_DRIVER_NAME
+  echo -n 'echo -n " - ' >> $START_ZOOKEEPER_DRIVER_NAME
+  echo -n $1 >> $START_ZOOKEEPER_DRIVER_NAME
+  echo ' - "' >> $START_ZOOKEEPER_DRIVER_NAME
   echo 'if $(/usr/bin/systemctl -q is-active zookeeper) ; then' >> $START_ZOOKEEPER_DRIVER_NAME
   echo '  echo "Already running"' >> $START_ZOOKEEPER_DRIVER_NAME
   echo 'else' >> $START_ZOOKEEPER_DRIVER_NAME
   echo '  sudo systemctl start zookeeper' >> $START_ZOOKEEPER_DRIVER_NAME
   echo '  echo "Started"' >> $START_ZOOKEEPER_DRIVER_NAME
-#  if ! [ $WAIT_SECONDS = 0 ]; then
-#    echo 'echo "   - Wait for Zookeeper to start"' >> $START_ZOOKEEPER_DRIVER_NAME
-#    echo -n 'sleep ' >> $START_ZOOKEEPER_DRIVER_NAME
-#    echo $WAIT_SECONDS >> $START_ZOOKEEPER_DRIVER_NAME
-#    echo 'echo "   - Zookeeper started"' >> $START_ZOOKEEPER_DRIVER_NAME
-#  fi
   echo 'fi' >> $START_ZOOKEEPER_DRIVER_NAME
 
   scp -q ./$START_ZOOKEEPER_DRIVER_NAME $1: 
@@ -179,6 +171,9 @@ echo "| Block R Provisoner"
 echo "|"
 echo "'----------------"
 
+echo "----------"
+echo " Starting Zookeeper"
+echo "----------"
 start_zookeeper vm1
 start_zookeeper vm2
 
