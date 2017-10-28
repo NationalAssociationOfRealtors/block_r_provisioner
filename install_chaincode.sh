@@ -48,7 +48,7 @@ distribute_chaincode_install_driver() {
   echo -n $CHAINCODE_PATH >> $INSTALL_DRIVER_NAME
   echo -n ' -o ' >> $INSTALL_DRIVER_NAME
   echo -n $1 >> $INSTALL_DRIVER_NAME
-  echo ':7050 $ORDERER_TLS' >> $INSTALL_DRIVER_NAME
+  echo ':7050 $ORDERER_TLS &> /dev/null' >> $INSTALL_DRIVER_NAME
 
   scp -q ./$INSTALL_DRIVER_NAME $1:
   ssh $1 "chmod 777 $INSTALL_DRIVER_NAME"
@@ -107,7 +107,7 @@ distribute_chaincode_instantiate_driver() {
 
   echo -n '-o ' >> $INSTANTIATE_DRIVER_NAME
   echo -n $1 >> $INSTANTIATE_DRIVER_NAME
-  echo ':7050 $ORDERER_TLS' >> $INSTANTIATE_DRIVER_NAME
+  echo ':7050 $ORDERER_TLS &>/dev/null' >> $INSTANTIATE_DRIVER_NAME
 
   scp -q ./$INSTANTIATE_DRIVER_NAME $1:
   ssh $1 "chmod 777 $INSTANTIATE_DRIVER_NAME"

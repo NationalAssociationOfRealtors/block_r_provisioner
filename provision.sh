@@ -14,7 +14,7 @@ export WITH_TLS=true
 export ZOOKEEPER_DIR=/var/zookeeper
 
 createAnchor() {
-  $FABRIC_PATH/build/bin/configtxgen -profile Channels -outputAnchorPeersUpdate $FABRIC_CFG_PATH/$1anchor.tx -channelID blockr -asOrg $1 
+  $FABRIC_PATH/build/bin/configtxgen -profile Channels -outputAnchorPeersUpdate $FABRIC_CFG_PATH/$1anchor.tx -channelID blockr -asOrg $1 &> /dev/null 
   if ! [ -f $FABRIC_CFG_PATH/$1anchor.tx ]; then
     echo "ERROR failed to create Anchor Peer Transaction for $1"
   fi
@@ -173,25 +173,25 @@ rm -rf $FABRIC_CFG_PATH
 mkdir -p $FABRIC_CFG_PATH 
 
 echo "----------"
-echo " Generate keys from $FABRIC_CFG_PATH/blockr-config.yaml"
+echo " Generate keys from blockr-config.yaml"
 echo "----------"
 cp ./templates/blockr-config.yaml $FABRIC_CFG_PATH
 $FABRIC_PATH/build/bin/cryptogen generate --config $FABRIC_CFG_PATH/blockr-config.yaml --output $FABRIC_CFG_PATH 
 
 echo "----------"
-echo " Generate genesis block from $FABRIC_CFG_PATH/configtx.yaml, profile:Genesis"
+echo " Generate genesis block from configtx.yaml, profile:Genesis"
 echo "----------"
 cp ./templates/configtx.yaml $FABRIC_CFG_PATH
-$FABRIC_PATH/build/bin/configtxgen -profile Genesis -outputBlock $FABRIC_CFG_PATH/genesis.block -channelID system
+$FABRIC_PATH/build/bin/configtxgen -profile Genesis -outputBlock $FABRIC_CFG_PATH/genesis.block -channelID system &> /dev/null
 if ! [ -f $FABRIC_CFG_PATH/genesis.block ]; then
   echo 'ERROR'
   exit 1
 fi
 
 echo "----------"
-echo " Generate channel block from $FABRIC_CFG_PATH/configtx.yaml, profile:Channels"
+echo " Generate channel block from configtx.yaml, profile:Channels"
 echo "----------"
-$FABRIC_PATH/build/bin/configtxgen -profile Channels -outputCreateChannelTx $FABRIC_CFG_PATH/blockr.tx -channelID blockr
+$FABRIC_PATH/build/bin/configtxgen -profile Channels -outputCreateChannelTx $FABRIC_CFG_PATH/blockr.tx -channelID blockr &> /dev/null
 if ! [ -f $FABRIC_CFG_PATH/blockr.tx ]; then
   echo 'ERROR'
   exit 1
@@ -200,7 +200,7 @@ fi
 if [ "$WITH_ANCHOR_PEERS" = true ]; then
 
   echo "----------"
-  echo " Generate AnchorPeer transactions from $FABRIC_CFG_PATH/configtx.yaml, profile:Channels"
+  echo " Generate AnchorPeer transactions from configtx.yaml, profile:Channels"
   echo "----------"
 
   createAnchor Org1MSP
