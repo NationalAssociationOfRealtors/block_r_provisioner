@@ -7,7 +7,6 @@ export FABRIC_CFG_PATH=$FABRIC_PATH/$CONFIG_DIR
 export CREATE_ANCHOR_DRIVER_NAME=create_anchor_driver.sh
 export CREATE_CHANNEL_DRIVER_NAME=create_channel_driver.sh
 export JOIN_CHANNEL_DRIVER_NAME=join_channel_driver.sh
-export WAIT_SECONDS=0
 export WITH_TLS=true
 
 create_channel_driver() {
@@ -56,12 +55,6 @@ create_channel_driver() {
   echo -n '-t ' >> $CREATE_CHANNEL_DRIVER_NAME
   echo -n $DELAY_TIME >> $CREATE_CHANNEL_DRIVER_NAME
   echo ' $ORDERER_TLS' >> $CREATE_CHANNEL_DRIVER_NAME
-  if ! [ $WAIT_SECONDS = 0 ]; then
-    echo 'echo " - Wait for Kafka to complete"' >> $CREATE_CHANNEL_DRIVER_NAME
-    echo -n "sleep " >> $CREATE_CHANNEL_DRIVER_NAME
-    echo $WAIT_SECONDS >> $CREATE_CHANNEL_DRIVER_NAME
-    echo 'echo " - Kafka complete"' >> $CREATE_CHANNEL_DRIVER_NAME
-  fi
   echo 'if ! [ -f blockr.block ]; then' >> $CREATE_CHANNEL_DRIVER_NAME
   echo '  echo ERROR' >> $CREATE_CHANNEL_DRIVER_NAME
   echo '  exit 1' >> $CREATE_CHANNEL_DRIVER_NAME
@@ -121,7 +114,8 @@ join_channel_driver() {
   echo 'rm joined_channels.txt' >> $JOIN_CHANNEL_DRIVER_NAME
   echo 'if ! [ -f $FABRIC_CFG_PATH/blockr.block ]; then' >> $JOIN_CHANNEL_DRIVER_NAME
   echo '  echo " - Fetch missing channel definition"' >> $JOIN_CHANNEL_DRIVER_NAME
-  echo -n '  $FABRIC_PATH/build/bin/peer channel fetch 0 $FABRIC_CFG_PATH/blockr.block -c blockr -o ' >> $JOIN_CHANNEL_DRIVER_NAME
+#  echo -n '  $FABRIC_PATH/build/bin/peer channel fetch 0 $FABRIC_CFG_PATH/blockr.block -c blockr -o ' >> $JOIN_CHANNEL_DRIVER_NAME
+  echo -n '  $FABRIC_PATH/build/bin/peer channel fetch oldest $FABRIC_CFG_PATH/blockr.block -c blockr -o ' >> $JOIN_CHANNEL_DRIVER_NAME
   echo -n $1 >> $JOIN_CHANNEL_DRIVER_NAME
   echo ':7050 $ORDERER_TLS' >> $JOIN_CHANNEL_DRIVER_NAME
   echo 'fi' >> $JOIN_CHANNEL_DRIVER_NAME
@@ -135,12 +129,6 @@ join_channel_driver() {
   echo -n $1 >> $JOIN_CHANNEL_DRIVER_NAME
   echo ':7050 $ORDERER_TLS' >> $JOIN_CHANNEL_DRIVER_NAME
   echo 'fi' >> $JOIN_CHANNEL_DRIVER_NAME
-  if ! [ $WAIT_SECONDS = 0 ]; then
-    echo 'echo " - Wait for Kafka to complete"' >> $JOIN_CHANNEL_DRIVER_NAME
-    echo -n "sleep " >> $JOIN_CHANNEL_DRIVER_NAME
-    echo $WAIT_SECONDS >> $JOIN_CHANNEL_DRIVER_NAME
-    echo 'echo " - Kafka complete"' >> $JOIN_CHANNEL_DRIVER_NAME
-  fi
 
   scp -q ./$JOIN_CHANNEL_DRIVER_NAME $1:
   ssh $1 "chmod 777 $JOIN_CHANNEL_DRIVER_NAME"
@@ -158,8 +146,6 @@ echo "|"
 echo "'----------------"
 
 create_channel_driver vm1 Org1MSP nar.blockr
-#scp vm1:$FABRIC_CFG_PATH/blockr.block .  
-#scp blockr.block vm2:$FABRIC_CFG_PATH/
 join_channel_driver vm1 Org1MSP nar.blockr
 join_channel_driver vm2 Org2MSP car.blockr
 
