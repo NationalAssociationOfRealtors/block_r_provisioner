@@ -118,12 +118,13 @@ reset() {
   echo $KAFKA_DIR >> $RESET_DRIVER_NAME 
   echo -n 'export ZOOKEEPER_DIR=' >> $RESET_DRIVER_NAME 
   echo $ZOOKEEPER_DIR >> $RESET_DRIVER_NAME 
-  echo 'echo " - Reset production repositories"' >> $RESET_DRIVER_NAME
+  echo 'echo " - Hyperledger repository"' >> $RESET_DRIVER_NAME
   echo 'if [ -d $HYPERLEDGER_DIR ]; then' >> $RESET_DRIVER_NAME
   echo '  sudo rm -rf $HYPERLEDGER_DIR' >> $RESET_DRIVER_NAME
   echo 'fi' >> $RESET_DRIVER_NAME
   echo 'sudo mkdir $HYPERLEDGER_DIR' >> $RESET_DRIVER_NAME
   echo 'sudo chown $(whoami):$(whoami) $HYPERLEDGER_DIR' >> $RESET_DRIVER_NAME
+  echo 'echo " - Zookeeper repository"' >> $RESET_DRIVER_NAME
   echo 'if [ -d $ZOOKEEPER_DIR ]; then' >> $RESET_DRIVER_NAME
   echo '  sudo rm -rf $ZOOKEEPER_DIR' >> $RESET_DRIVER_NAME
   echo 'fi' >> $RESET_DRIVER_NAME
@@ -132,6 +133,7 @@ reset() {
   echo -n $2 >> $RESET_DRIVER_NAME
   echo '"> ~/myid' >> $RESET_DRIVER_NAME
   echo 'sudo mv ~/myid $ZOOKEEPER_DIR' >> $RESET_DRIVER_NAME
+  echo 'echo " - Kafka repository"' >> $RESET_DRIVER_NAME
   echo 'if [ -d $KAFKA_DIR ]; then' >> $RESET_DRIVER_NAME
   echo '  sudo rm -rf $KAFKA_DIR' >> $RESET_DRIVER_NAME
   echo 'fi' >> $RESET_DRIVER_NAME
@@ -176,21 +178,21 @@ echo "----------"
 echo " Generate keys from blockr-config.yaml"
 echo "----------"
 cp ./templates/blockr-config.yaml $FABRIC_CFG_PATH
-$FABRIC_PATH/build/bin/cryptogen generate --config $FABRIC_CFG_PATH/blockr-config.yaml --output $FABRIC_CFG_PATH 
+$FABRIC_PATH/build/bin/cryptogen generate --config $FABRIC_CFG_PATH/blockr-config.yaml --output $FABRIC_CFG_PATH &> generate_keys.txt
+cat generate_keys.txt
+rm generate_keys.txt
 
 echo "----------"
-echo " Generate genesis block from configtx.yaml, profile:Genesis"
+echo " Generate artifacts from configtx.yaml"
 echo "----------"
+echo " - Genesis block using profile:Genesis"
 cp ./templates/configtx.yaml $FABRIC_CFG_PATH
 $FABRIC_PATH/build/bin/configtxgen -profile Genesis -outputBlock $FABRIC_CFG_PATH/genesis.block -channelID system &> /dev/null
 if ! [ -f $FABRIC_CFG_PATH/genesis.block ]; then
   echo 'ERROR'
   exit 1
 fi
-
-echo "----------"
-echo " Generate channel block from configtx.yaml, profile:Channels"
-echo "----------"
+echo " - Channel block using profile:Channels"
 $FABRIC_PATH/build/bin/configtxgen -profile Channels -outputCreateChannelTx $FABRIC_CFG_PATH/blockr.tx -channelID blockr &> /dev/null
 if ! [ -f $FABRIC_CFG_PATH/blockr.tx ]; then
   echo 'ERROR'
@@ -198,14 +200,9 @@ if ! [ -f $FABRIC_CFG_PATH/blockr.tx ]; then
 fi
 
 if [ "$WITH_ANCHOR_PEERS" = true ]; then
-
-  echo "----------"
-  echo " Generate AnchorPeer transactions from configtx.yaml, profile:Channels"
-  echo "----------"
-
+  echo " - AnchorPeer transactions using profile:Channels"
   createAnchor Org1MSP
   createAnchor Org2MSP
-
 fi
 
 distribute_conf vm1 Org1MSP nar.blockr Orderer1MSP 0
