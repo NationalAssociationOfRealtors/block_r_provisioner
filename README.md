@@ -56,8 +56,8 @@ There is also a `scripts` directory that contains:
 
 Configuration templates are found in the `templates` directory:
 
-- `blockr-config.yaml` - network configuration file
-- `configtx.yaml` - genesis block and channel configuration file
+- `blockr-config.yaml` - network configuration file as a two node sample. This will be auto-generated.
+- `configtx.yaml` - genesis block and channel configuration file as a itwo node sample. This will be auto-generated.
 - `core.yaml` - peer configuration file
 - `orderer.yaml` - orderer configuration file
 - `server.properties` - kafka configuration file
