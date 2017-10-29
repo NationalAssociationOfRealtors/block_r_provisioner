@@ -107,7 +107,7 @@ echo "|"
 echo "'----------------"
 
 . config.sh
-. common.sh
+. ./scripts/common.sh
 
 #
 # shutdown nodes 

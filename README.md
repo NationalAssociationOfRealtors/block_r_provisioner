@@ -35,7 +35,6 @@ This tool was created to help maintain the regional Block R processing nodes.  H
 
 The following primary scripts can be found in the root directory:
 
-- `common.sh` - shared functions  
 - `config.sh` - configuration file  
 - `create_channel.sh` - adds the peer on each node to the "blockr" channel  
 - `install.sh` - install Hyperledget Fabric and systyemd scripts 
@@ -48,6 +47,7 @@ The following primary scripts can be found in the root directory:
 
 There is also a `scripts` directory that contains:
 
+- `common.sh` - shared functions  
 - `invoke.sh` - used to modify contents of the edger for testing
 - `kafka.service` - systemd service for Kafka
 - `list_channels.sh` - lists the channels that the peer is subscribed to 

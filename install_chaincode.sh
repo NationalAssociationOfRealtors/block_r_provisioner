@@ -125,7 +125,7 @@ echo "'----------------"
 
 
 . config.sh
-. common.sh
+. ./scripts/common.sh
 
 #
 #  distribute chaincode 

@@ -155,7 +155,7 @@ echo "|"
 echo "'----------------"
 
 . config.sh
-. common.sh
+. ./scripts/common.sh
 
 #
 # prepare all nodes
@@ -368,7 +368,7 @@ echo '    "V1.1": true' >> $blockr_config
 echo "  Application: &ApplicationCapabilities" >> $blockr_config
 echo '    "V1.1": true' >> $blockr_config
 
-$FABRIC_PATH/build/bin/configtxgen -profile Genesis -outputBlock $FABRIC_CFG_PATH/genesis.block -channelID system
+$FABRIC_PATH/build/bin/configtxgen -profile Genesis -outputBlock $FABRIC_CFG_PATH/genesis.block -channelID system &> /dev/null
 
 if ! [ -f $FABRIC_CFG_PATH/genesis.block ]; then
   echo 'ERROR'

@@ -155,7 +155,7 @@ echo "|"
 echo "'----------------"
 
 . config.sh
-. common.sh
+. ./scripts/common.sh
 
 #
 # create the channel 

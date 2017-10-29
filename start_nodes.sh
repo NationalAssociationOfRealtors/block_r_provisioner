@@ -147,7 +147,7 @@ echo "'----------------"
 
 
 . config.sh
-. common.sh
+. ./scripts/common.sh
 
 echo "----------"
 echo " Starting Zookeeper"
