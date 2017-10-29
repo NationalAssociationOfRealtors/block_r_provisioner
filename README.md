@@ -35,6 +35,8 @@ This tool was created to help maintain the regional Block R processing nodes.  H
 
 The following primary scripts can be found in the root directory:
 
+- `common.sh` - shared functions  
+- `config.sh` - configuration file  
 - `create_channel.sh` - adds the peer on each node to the "blockr" channel  
 - `install.sh` - install Hyperledget Fabric and systyemd scripts 
 - `install_chaincode.sh` - installs chaincode on each node 
@@ -52,7 +54,7 @@ There is also a `scripts` directory that contains:
 - `query.sh` - used to inspect the contents of the ledger during testing
 - `zookeeper.service` - systemd service for Zookeeper 
 
-Configuration files are found in the `templates` directory:
+Configuration templates are found in the `templates` directory:
 
 - `blockr-config.yaml` - network configuration file
 - `configtx.yaml` - genesis block and channel configuration file
@@ -86,7 +88,9 @@ When you are done testing, use the `stop_nodes.sh` script to stop the nodes.
 
 **Configuration**
 
-All configuration is conducted on files in the `templates` directory.  The distribution is pre-configurec for a two node system.  These nodes are valled `vm1` and `vm2`.  In order to test run the system, set up two Centos 7 servers and define their addresses in `/etc/hosts`.  
+All configuration is conducted on files in the `templates` directory.  The distribution is pre-configured for a two node system.  These nodes are called `vm1` and `vm2`.  You can add more servers by modifying `conrfsig.sh`  
+
+In order to test run the system, set up two Centos 7 servers and define their addresses in `/etc/hosts`.  
 
 Each node should have the following components:
 

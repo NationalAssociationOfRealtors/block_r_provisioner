@@ -1,3 +1,4 @@
+#!/bin/bash
 
 export CONFIG_DIR=blockr_config
 export DEBUG=false
@@ -102,7 +103,7 @@ reset() {
   echo "----------"
 
   cp ./templates/server.properties $TEMP_CFG_PATH/server.properties.template
-  cat $TEMP_CFG_PATH/server.properties.template | sed "s|BROKER_ID|$2| ; s|SERVER_ADDRESS|$1| " > $TEMP_CFG_PATH/server.properties
+  cat $TEMP_CFG_PATH/server.properties.template | sed "s|BROKER_ID|$2| ; s|SERVER_ADDRESS|$1| ; s|ZOOKEEPER_CONNECT|$3| " > $TEMP_CFG_PATH/server.properties
   scp -q $TEMP_CFG_PATH/server.properties $1:/opt/kafka_2.11-0.10.2.0/config 
   scp -q $TEMP_CFG_PATH/zookeeper.properties $1:/opt/kafka_2.11-0.10.2.0/config 
   echo '#!/bin/bash' > $RESET_DRIVER_NAME
@@ -153,19 +154,46 @@ echo "| Block R Provisoner"
 echo "|"
 echo "'----------------"
 
-prepare vm2
-prepare vm1
+. config.sh
+. common.sh
 
+#
+# prepare all nodes
+#
+COUNTER=0
+while [  $COUNTER -lt $node_count ]; do
+  let COUNTER=COUNTER+1 
+  prepare $(parse_lookup "$COUNTER" "$nodes")
+done
+
+#
+# setup zookeepers to look at all orderer nodes 
+# create a list of zookeepers for each kafka 
+#
 if [ -d $TEMP_CFG_PATH ]; then
   rm -rf $TEMP_CFG_PATH
 fi
 mkdir -p $TEMP_CFG_PATH
 cp ./templates/zookeeper.properties $TEMP_CFG_PATH
-echo "server.1=vm1:2888:3888" >> $TEMP_CFG_PATH/zookeeper.properties 
-echo "server.2=vm2:2888:3888" >> $TEMP_CFG_PATH/zookeeper.properties 
-reset vm1 1
-rm -rf $TEMP_CFG_PATH/server.properties
-reset vm2 2
+zookeeper_connect=""
+COUNTER=0
+while [  $COUNTER -lt $zookeeper_count ]; do
+  let COUNTER=COUNTER+1 
+  z=$(parse_lookup "$COUNTER" "$zookeepers")
+  echo "server.$COUNTER=$z:2888:3888" >> $TEMP_CFG_PATH/zookeeper.properties 
+  zookeeper_connect="$zookeeper_connect$z:2181,"
+done
+zookeeper_connect=${zookeeper_connect:0:-1}
+
+#
+# setup kafkas for each node and to look for all zookeepers 
+#
+COUNTER=0
+while [  $COUNTER -lt $node_count ]; do
+  let COUNTER=COUNTER+1 
+  reset $(parse_lookup "$COUNTER" "$nodes") $COUNTER $zookeeper_connect 
+  rm -rf $TEMP_CFG_PATH/server.properties
+done
 rm -rf $TEMP_CFG_PATH
 
 echo "----------"
@@ -177,8 +205,46 @@ mkdir -p $FABRIC_CFG_PATH
 echo "----------"
 echo " Generate keys from blockr-config.yaml"
 echo "----------"
-cp ./templates/blockr-config.yaml $FABRIC_CFG_PATH
-$FABRIC_PATH/build/bin/cryptogen generate --config $FABRIC_CFG_PATH/blockr-config.yaml --output $FABRIC_CFG_PATH &> generate_keys.txt
+
+#cp ./templates/blockr-config.yaml $FABRIC_CFG_PATH
+#$FABRIC_PATH/build/bin/cryptogen generate --config $FABRIC_CFG_PATH/blockr-config.yaml --output $FABRIC_CFG_PATH &> generate_keys.txt
+
+#
+# create blockr definitions 
+#
+blockr_config=$FABRIC_CFG_PATH/blockr-config.yaml
+echo "################################################################################" >> $blockr_config 
+echo "#" >> $blockr_config 
+echo "#  Block R Network Configuration generated from config.sh" >> $blockr_config 
+echo "#" >> $blockr_config 
+echo "################################################################################" >> $blockr_config 
+echo "OrdererOrgs:" >> $blockr_config 
+COUNTER=0
+while [  $COUNTER -lt $node_count ]; do
+  let COUNTER=COUNTER+1
+  echo -n "  - Name: " >> $blockr_config 
+  echo $(parse_lookup "$COUNTER" "$orderers") >> $blockr_config 
+  echo -n "    Domain: " >> $blockr_config 
+  echo $(parse_lookup "$COUNTER" "$domains") >> $blockr_config 
+  echo "    Specs:" >> $blockr_config 
+  echo -n "      - Hostname: " >> $blockr_config 
+  echo $(parse_lookup "$COUNTER" "$nodes") >> $blockr_config 
+done
+echo "PeerOrgs:" >> $blockr_config 
+COUNTER=0
+while [  $COUNTER -lt $node_count ]; do
+  let COUNTER=COUNTER+1
+  echo -n "  - Name: " >> $blockr_config 
+  echo $(parse_lookup "$COUNTER" "$peers") >> $blockr_config 
+  echo -n "    Domain: " >> $blockr_config 
+  echo $(parse_lookup "$COUNTER" "$domains") >> $blockr_config 
+  echo "    Users:" >> $blockr_config 
+  echo "      Count: 1" >> $blockr_config 
+  echo "    Specs:" >> $blockr_config 
+  echo -n "      - Hostname: " >> $blockr_config 
+  echo $(parse_lookup "$COUNTER" "$nodes") >> $blockr_config 
+done
+$FABRIC_PATH/build/bin/cryptogen generate --config $blockr_config --output $FABRIC_CFG_PATH &> generate_keys.txt
 cat generate_keys.txt
 rm generate_keys.txt
 
@@ -186,8 +252,124 @@ echo "----------"
 echo " Generate artifacts from configtx.yaml"
 echo "----------"
 echo " - Genesis block using profile:Genesis"
-cp ./templates/configtx.yaml $FABRIC_CFG_PATH
-$FABRIC_PATH/build/bin/configtxgen -profile Genesis -outputBlock $FABRIC_CFG_PATH/genesis.block -channelID system &> /dev/null
+
+#cp ./templates/configtx.yaml $FABRIC_CFG_PATH
+blockr_config=$FABRIC_CFG_PATH/configtx.yaml
+echo "---" >> $blockr_config 
+echo "################################################################################" >> $blockr_config 
+echo "#" >> $blockr_config 
+echo "#  Block R Profile generated from config.sh" >> $blockr_config 
+echo "#" >> $blockr_config 
+echo "################################################################################" >> $blockr_config 
+echo "Profiles:" >> $blockr_config 
+echo "  Genesis:" >> $blockr_config 
+echo "    Capabilities:" >> $blockr_config 
+echo "      <<: *GlobalCapabilities" >> $blockr_config
+echo "    Orderer:" >> $blockr_config 
+echo "      <<: *OrdererDefaults" >> $blockr_config
+echo "      Organizations:" >> $blockr_config
+COUNTER=0
+while [  $COUNTER -lt $node_count ]; do
+  let COUNTER=COUNTER+1
+  echo "        - *OrdererOrg$COUNTER" >> $blockr_config 
+done
+echo "      Capabilities:" >> $blockr_config
+echo "        <<: *OrdererCapabilities" >> $blockr_config
+echo "    Consortiums:" >> $blockr_config 
+echo "      RealtorAssociations:" >> $blockr_config 
+echo "        Organizations:" >> $blockr_config
+COUNTER=0
+while [  $COUNTER -lt $node_count ]; do
+  let COUNTER=COUNTER+1
+  echo "          - *Org$COUNTER" >> $blockr_config 
+done
+echo "  Channels:" >> $blockr_config 
+echo "    Consortium: RealtorAssociations" >> $blockr_config 
+echo "    Application:" >> $blockr_config 
+echo "      <<: *ApplicationDefaults" >> $blockr_config
+echo "      Organizations:" >> $blockr_config
+COUNTER=0
+while [  $COUNTER -lt $node_count ]; do
+  let COUNTER=COUNTER+1
+  echo "        - *Org$COUNTER" >> $blockr_config 
+done
+echo "      Capabilities:" >> $blockr_config
+echo "        <<: *ApplicationCapabilities" >> $blockr_config
+echo "Organizations:" >> $blockr_config 
+COUNTER=0
+while [  $COUNTER -lt $node_count ]; do
+  let COUNTER=COUNTER+1
+  echo "  - &OrdererOrg$COUNTER" >> $blockr_config 
+  anOrderer=$(parse_lookup "$COUNTER" "$orderers")
+  echo -n "    Name: " >> $blockr_config
+  echo $anOrderer >> $blockr_config 
+  echo -n "    ID: " >> $blockr_config
+  echo $anOrderer >> $blockr_config 
+  echo "    AdminPrincipal: Role.ADMIN" >>$blockr_config
+#    AdminPrincipal: Role.MEMBER
+  aDomain=$(parse_lookup "$COUNTER" "$domains")
+  echo -n "    MSPDir: ordererOrganizations/" >> $blockr_config
+  echo -n $aDomain >> $blockr_config 
+  echo "/msp" >> $blockr_config
+done
+COUNTER=0
+while [  $COUNTER -lt $node_count ]; do
+  let COUNTER=COUNTER+1
+  echo "  - &Org$COUNTER" >> $blockr_config 
+  aPeer=$(parse_lookup "$COUNTER" "$peers")
+  echo -n "    Name: " >> $blockr_config
+  echo $aPeer >> $blockr_config 
+  echo -n "    ID: " >> $blockr_config
+  echo $aPeer >> $blockr_config 
+  echo "    AdminPrincipal: Role.ADMIN" >>$blockr_config
+#    AdminPrincipal: Role.MEMBER
+  aDomain=$(parse_lookup "$COUNTER" "$domains")
+  echo -n "    MSPDir: peerOrganizations/" >> $blockr_config
+  echo -n $aDomain >> $blockr_config 
+  echo "/msp" >> $blockr_config
+  echo "    AnchorPeers:" >> $blockr_config
+  echo -n "      - Host: " >> $blockr_config
+  echo $(parse_lookup "$COUNTER" "$nodes") >> $blockr_config
+  echo "        Port: 7051" >> $blockr_config
+done
+echo "Orderer: &OrdererDefaults" >> $blockr_config 
+echo "  OrdererType: kafka" >> $blockr_config
+echo "  Addresses:" >> $blockr_config
+COUNTER=0
+while [  $COUNTER -lt $node_count ]; do
+  let COUNTER=COUNTER+1
+  echo -n "    - " >> $blockr_config 
+  echo -n $(parse_lookup "$COUNTER" "$nodes") >> $blockr_config 
+  echo ":7050" >> $blockr_config 
+done
+echo "  BatchTimeout: 1ms" >> $blockr_config
+echo "  BatchSize:" >> $blockr_config
+echo "    MaxMessageCount: 10" >> $blockr_config
+echo "    AbsoluteMaxBytes: 95 MB" >> $blockr_config
+echo "    PreferredMaxBytes: 95 KB" >> $blockr_config
+echo "  MaxChannels: 0" >> $blockr_config
+echo "  Kafka:" >> $blockr_config
+echo "    Brokers:" >> $blockr_config
+COUNTER=0
+while [  $COUNTER -lt $node_count ]; do
+  let COUNTER=COUNTER+1
+  echo -n "      - " >> $blockr_config 
+  echo -n $(parse_lookup "$COUNTER" "$nodes") >> $blockr_config 
+  echo ":9092" >> $blockr_config 
+done
+echo "  Organizations:" >> $blockr_config
+echo "Application: &ApplicationDefaults" >> $blockr_config 
+echo "  Organizations:" >> $blockr_config
+echo "Capabilities:" >> $blockr_config 
+echo "  Global: &GlobalCapabilities" >> $blockr_config
+echo '    "V1.1": true' >> $blockr_config
+echo "  Orderer: &OrdererCapabilities" >> $blockr_config
+echo '    "V1.1": true' >> $blockr_config
+echo "  Application: &ApplicationCapabilities" >> $blockr_config
+echo '    "V1.1": true' >> $blockr_config
+
+$FABRIC_PATH/build/bin/configtxgen -profile Genesis -outputBlock $FABRIC_CFG_PATH/genesis.block -channelID system
+
 if ! [ -f $FABRIC_CFG_PATH/genesis.block ]; then
   echo 'ERROR'
   exit 1
@@ -199,14 +381,26 @@ if ! [ -f $FABRIC_CFG_PATH/blockr.tx ]; then
   exit 1
 fi
 
+#
+# AnchorPeer transactions
+#
 if [ "$WITH_ANCHOR_PEERS" = true ]; then
   echo " - AnchorPeer transactions using profile:Channels"
-  createAnchor Org1MSP
-  createAnchor Org2MSP
+  COUNTER=0
+  while [  $COUNTER -lt $node_count ]; do
+    let COUNTER=COUNTER+1 
+    createAnchor $(parse_lookup "$COUNTER" "$peers")
+  done
 fi
 
-distribute_conf vm1 Org1MSP nar.blockr Orderer1MSP 0
-distribute_conf vm2 Org2MSP car.blockr Orderer2MSP 1
+#
+# Peer and orderer configurartion distribution
+#
+COUNTER=0
+while [  $COUNTER -lt $node_count ]; do
+  let COUNTER=COUNTER+1 
+  distribute_conf $(parse_lookup "$COUNTER" "$nodes") $(parse_lookup "$COUNTER" "$peers") $(parse_lookup "$COUNTER" "$domains") $(parse_lookup "$COUNTER" "$orderers")
+done
 
 rm -rf $FABRIC_CFG_PATH 
 

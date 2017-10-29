@@ -1,3 +1,4 @@
+#!/bin/bash
 
 export DEBUG=false
 export STOP_DAEMON_DRIVER_NAME=stop_daemon_driver.sh
@@ -63,14 +64,6 @@ shutdown_daemons() {
   echo '  echo "- Not running"' >> $STOP_DAEMON_DRIVER_NAME
   echo 'fi' >> $STOP_DAEMON_DRIVER_NAME
 
-#  echo 'echo -n " - Zookeeper "' >> $STOP_DAEMON_DRIVER_NAME
-#  echo 'if $(/usr/bin/systemctl -q is-active zookeeper) ; then' >> $STOP_DAEMON_DRIVER_NAME
-#  echo '  echo " stopping"' >> $STOP_DAEMON_DRIVER_NAME
-#  echo '  sudo systemctl stop zookeeper' >> $STOP_DAEMON_DRIVER_NAME
-#  echo 'else' >> $STOP_DAEMON_DRIVER_NAME
-#  echo '  echo " not running"' >> $STOP_DAEMON_DRIVER_NAME
-#  echo 'fi' >> $STOP_DAEMON_DRIVER_NAME
-
   scp -q ./$STOP_DAEMON_DRIVER_NAME $1: 
   ssh $1 "chmod 777 $STOP_DAEMON_DRIVER_NAME"
   ssh $1 "./$STOP_DAEMON_DRIVER_NAME"
@@ -113,14 +106,32 @@ echo "| Block R Provisoner"
 echo "|"
 echo "'----------------"
 
-shutdown_node vm2
-shutdown_node vm1
+. config.sh
+. common.sh
 
-shutdown_daemons vm2
-shutdown_daemons vm1
+#
+# shutdown nodes 
+#
+COUNTER=0
+while [  $COUNTER -lt $node_count ]; do
+  let COUNTER=COUNTER+1
+  shutdown_node $(parse_lookup "$COUNTER" "$nodes")
+done
+
+#
+# shutdown daemons
+#
+COUNTER=0
+while [  $COUNTER -lt $node_count ]; do
+  let COUNTER=COUNTER+1
+  shutdown_daemons $(parse_lookup "$COUNTER" "$nodes")
+done
 
 echo "----------"
 echo " Stopping Zookeeper"
 echo "----------"
-shutdown_zookeeper vm2
-shutdown_zookeeper vm1
+COUNTER=0
+while [  $COUNTER -lt $zookeeper_count ]; do
+  let COUNTER=COUNTER+1
+  shutdown_zookeeper $(parse_lookup "$COUNTER" "$zookeepers")
+done

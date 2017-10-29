@@ -1,3 +1,4 @@
+#!/bin/bash
 
 export CONFIG_DIR=blockr_config
 export DEBUG=false
@@ -90,7 +91,7 @@ start_daemons() {
   rm ./$START_DAEMON_DRIVER_NAME
 }
 
-start_node_driver() {
+start_node() {
   echo "----------"
   echo " Start Node $1"
   echo "----------"
@@ -144,15 +145,34 @@ echo "| Block R Provisoner"
 echo "|"
 echo "'----------------"
 
+
+. config.sh
+. common.sh
+
 echo "----------"
 echo " Starting Zookeeper"
 echo "----------"
-start_zookeeper vm1
-start_zookeeper vm2
+COUNTER=0
+while [  $COUNTER -lt $zookeeper_count ]; do
+  let COUNTER=COUNTER+1
+  start_zookeeper $(parse_lookup "$COUNTER" "$zookeepers")
+done
 
-start_daemons vm1
-start_daemons vm2
+#
+# start daemons
+#
+COUNTER=0
+while [  $COUNTER -lt $node_count ]; do
+  let COUNTER=COUNTER+1
+  start_daemons $(parse_lookup "$COUNTER" "$nodes")
+done
 
-start_node_driver vm1
-start_node_driver vm2
+#
+# start nodes 
+#
+COUNTER=0
+while [  $COUNTER -lt $node_count ]; do
+  let COUNTER=COUNTER+1
+  start_node $(parse_lookup "$COUNTER" "$nodes")
+done
 

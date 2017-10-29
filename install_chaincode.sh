@@ -1,3 +1,4 @@
+#!/bin/bash
 
 export CHAINCODE_ID='exampleCC -v 1.0'
 export CHAINCODE_PATH='github.com/hyperledger/fabric/examples/chaincode/go/chaincode_example02'
@@ -9,7 +10,7 @@ export INSTALL_DRIVER_NAME=install_chaincode_driver.sh
 export INSTANTIATE_DRIVER_NAME=instantiate_chaincode_driver.sh
 export WITH_TLS=true
 
-distribute_chaincode_install_driver() {
+distribute_chaincode_install() {
   echo "----------"
   echo " Install chaincode on Node $1"
   echo "----------"
@@ -18,7 +19,6 @@ distribute_chaincode_install_driver() {
   if [ "$WITH_TLS" = true ]; then
     ORDERER_TLS="--tls --cafile $FABRIC_CFG_PATH/ordererOrganizations/$2/orderers/$1.$2/tls/ca.crt"
   fi
-
   echo '#!/bin/bash' > $INSTALL_DRIVER_NAME
   echo '' >> $INSTALL_DRIVER_NAME
   echo '#----------------' >> $INSTALL_DRIVER_NAME
@@ -59,7 +59,7 @@ distribute_chaincode_install_driver() {
   rm ./$INSTALL_DRIVER_NAME
 }
 
-distribute_chaincode_instantiate_driver() {
+distribute_chaincode_instantiate() {
   echo "----------"
   echo " Instantiate the chaincode from Node $1"
   echo "----------"
@@ -68,7 +68,6 @@ distribute_chaincode_instantiate_driver() {
   if [ "$WITH_TLS" = true ]; then
     ORDERER_TLS="--tls --cafile $FABRIC_CFG_PATH/ordererOrganizations/$2/orderers/$1.$2/tls/ca.crt"
   fi
-
   export CHAINCODE_ARGS='{"Args":["init","a","100","b","200"]}'
   export CHAINCODE_POLICY="OR('Org1.member', 'Org2.member')"
   echo '#!/bin/bash' > $INSTANTIATE_DRIVER_NAME
@@ -124,8 +123,22 @@ echo "| Block R Provisoner"
 echo "|"
 echo "'----------------"
 
-distribute_chaincode_install_driver vm1 nar.blockr
-distribute_chaincode_install_driver vm2 car.blockr
 
-distribute_chaincode_instantiate_driver vm1 nar.blockr
+. config.sh
+. common.sh
+
+#
+#  distribute chaincode 
+#
+COUNTER=0
+while [  $COUNTER -lt $node_count ]; do
+  let COUNTER=COUNTER+1
+  distribute_chaincode_install $(parse_lookup "$COUNTER" "$nodes") $(parse_lookup "$COUNTER" "$domains")
+done
+
+#
+# instantiate chaincode 
+#
+distribute_chaincode_instantiate $(parse_lookup 1 "$nodes") $(parse_lookup 1 "$domains")
+
 
