@@ -1,0 +1,5 @@
+zookeepers="vm1 vm2"
+nodes="vm1 vm2"
+domains="nar.blockr car.blockr"
+orderers="Orderer1MSP Orderer2MSP"
+peers="Org1MSP Org2MSP"
