@@ -42,8 +42,10 @@ create_channel() {
   echo '"' >> $CREATE_CHANNEL_DRIVER_NAME
   echo -n '$FABRIC_PATH/build/bin/peer channel list -o ' >> $CREATE_CHANNEL_DRIVER_NAME
   echo -n $1 >> $CREATE_CHANNEL_DRIVER_NAME
-#  echo ':7050 $ORDERER_TLS' >> $CREATE_CHANNEL_DRIVER_NAME
   echo ':7050 $ORDERER_TLS &> joined_channels.txt' >> $CREATE_CHANNEL_DRIVER_NAME
+  if [ "$DEBUG" == true ]; then
+    echo 'cat joined_channels.txt' >> $CREATE_CHANNEL_DRIVER_NAME
+  fi
   echo 'if grep -q blockr joined_channels.txt; then' >> $CREATE_CHANNEL_DRIVER_NAME
   echo '  echo " - Channel exists"' >> $CREATE_CHANNEL_DRIVER_NAME
   echo '  rm joined_channels.txt' >> $CREATE_CHANNEL_DRIVER_NAME
@@ -56,8 +58,11 @@ create_channel() {
   echo -n ':7050 ' >> $CREATE_CHANNEL_DRIVER_NAME
   echo -n '-t ' >> $CREATE_CHANNEL_DRIVER_NAME
   echo -n $DELAY_TIME >> $CREATE_CHANNEL_DRIVER_NAME
-#  echo ' $ORDERER_TLS' >> $CREATE_CHANNEL_DRIVER_NAME
-  echo ' $ORDERER_TLS &> /dev/null' >> $CREATE_CHANNEL_DRIVER_NAME
+  if [ "$DEBUG" != true ]; then
+    echo ' $ORDERER_TLS &> /dev/null' >> $CREATE_CHANNEL_DRIVER_NAME
+  else 
+    echo ' $ORDERER_TLS' >> $CREATE_CHANNEL_DRIVER_NAME
+  fi
   echo 'if ! [ -f blockr.block ]; then' >> $CREATE_CHANNEL_DRIVER_NAME
   echo '  echo ERROR' >> $CREATE_CHANNEL_DRIVER_NAME
   echo '  exit 1' >> $CREATE_CHANNEL_DRIVER_NAME
@@ -91,7 +96,7 @@ join_channel() {
   echo '#----------------' >> $JOIN_CHANNEL_DRIVER_NAME
   echo -n 'export ANCHOR_PEER_NAME=' >> $JOIN_CHANNEL_DRIVER_NAME
   echo -n $2 >> $JOIN_CHANNEL_DRIVER_NAME
-  echo 'anchor.tx' >> $JOIN_CHANNEL_DRIVER_NAME
+  echo '-anchor.tx' >> $JOIN_CHANNEL_DRIVER_NAME
   echo -n 'export CORE_PEER_MSPCONFIGPATH=' >> $JOIN_CHANNEL_DRIVER_NAME
   echo -n $FABRIC_CFG_PATH >> $JOIN_CHANNEL_DRIVER_NAME
   echo -n '/peerOrganizations/' >> $JOIN_CHANNEL_DRIVER_NAME
@@ -109,6 +114,9 @@ join_channel() {
   echo -n '$FABRIC_PATH/build/bin/peer channel list -o ' >> $JOIN_CHANNEL_DRIVER_NAME
   echo -n $1 >> $JOIN_CHANNEL_DRIVER_NAME
   echo ':7050 $ORDERER_TLS &> joined_channels.txt' >> $JOIN_CHANNEL_DRIVER_NAME
+  if [ "$DEBUG" == true ]; then
+    echo 'cat joined_channels.txt' >> $JOIN_CHANNEL_DRIVER_NAME
+  fi
   echo 'if grep -q blockr joined_channels.txt; then' >> $JOIN_CHANNEL_DRIVER_NAME
   echo '  echo " - Channel is already joined"' >> $JOIN_CHANNEL_DRIVER_NAME
   echo '  rm joined_channels.txt' >> $JOIN_CHANNEL_DRIVER_NAME
@@ -120,12 +128,19 @@ join_channel() {
 #  echo -n '  $FABRIC_PATH/build/bin/peer channel fetch 0 $FABRIC_CFG_PATH/blockr.block -c blockr -o ' >> $JOIN_CHANNEL_DRIVER_NAME
   echo -n '  $FABRIC_PATH/build/bin/peer channel fetch oldest $FABRIC_CFG_PATH/blockr.block -c blockr -o ' >> $JOIN_CHANNEL_DRIVER_NAME
   echo -n $1 >> $JOIN_CHANNEL_DRIVER_NAME
-  echo ':7050 $ORDERER_TLS &> /dev/null' >> $JOIN_CHANNEL_DRIVER_NAME
+  if [ "$DEBUG" != true ]; then
+    echo ':7050 $ORDERER_TLS &> /dev/null' >> $JOIN_CHANNEL_DRIVER_NAME
+  else 
+    echo ':7050 $ORDERER_TLS' >> $JOIN_CHANNEL_DRIVER_NAME
+  fi
   echo 'fi' >> $JOIN_CHANNEL_DRIVER_NAME
   echo 'echo " - Join the channel"' >> $JOIN_CHANNEL_DRIVER_NAME
   echo -n '$FABRIC_PATH/build/bin/peer channel join -b $FABRIC_CFG_PATH/blockr.block -o ' >> $JOIN_CHANNEL_DRIVER_NAME
   echo -n $1 >> $JOIN_CHANNEL_DRIVER_NAME
   echo ':7050 $ORDERER_TLS &> joined_channels.txt' >> $JOIN_CHANNEL_DRIVER_NAME
+  if [ "$DEBUG" == true ]; then
+    echo 'cat joined_channels.txt' >> $JOIN_CHANNEL_DRIVER_NAME
+  fi
   echo 'if grep -q "Peer joined the channel!" joined_channels.txt; then' >> $JOIN_CHANNEL_DRIVER_NAME
   echo '  echo " - Peer joined the channel!"' >> $JOIN_CHANNEL_DRIVER_NAME
   echo '  rm joined_channels.txt' >> $JOIN_CHANNEL_DRIVER_NAME
@@ -136,7 +151,11 @@ join_channel() {
   echo '  echo " - Add AnchorPeer"' >> $JOIN_CHANNEL_DRIVER_NAME
   echo -n '  $FABRIC_PATH/build/bin/peer channel update -f $FABRIC_CFG_PATH/$ANCHOR_PEER_NAME -c blockr -o ' >> $JOIN_CHANNEL_DRIVER_NAME
   echo -n $1 >> $JOIN_CHANNEL_DRIVER_NAME
-  echo ':7050 $ORDERER_TLS &> /dev/null' >> $JOIN_CHANNEL_DRIVER_NAME
+  if [ "$DEBUG" != true ]; then
+    echo ':7050 $ORDERER_TLS &> /dev/null' >> $JOIN_CHANNEL_DRIVER_NAME
+  else
+    echo ':7050 $ORDERER_TLS' >> $JOIN_CHANNEL_DRIVER_NAME
+  fi
   echo 'fi' >> $JOIN_CHANNEL_DRIVER_NAME
 
   scp -q ./$JOIN_CHANNEL_DRIVER_NAME $1:

@@ -15,8 +15,13 @@ export WITH_TLS=true
 export ZOOKEEPER_DIR=/var/zookeeper
 
 createAnchor() {
-  $FABRIC_PATH/build/bin/configtxgen -profile Channels -outputAnchorPeersUpdate $FABRIC_CFG_PATH/$1anchor.tx -channelID blockr -asOrg $1 &> /dev/null 
-  if ! [ -f $FABRIC_CFG_PATH/$1anchor.tx ]; then
+  anchorName=$FABRIC_CFG_PATH/$1-anchor.tx
+  if [ "$DEBUG" != true ]; then
+    $FABRIC_PATH/build/bin/configtxgen -profile Channels -outputAnchorPeersUpdate $anchorName -channelID blockr -asOrg $1 &> /dev/null
+  else 
+    $FABRIC_PATH/build/bin/configtxgen -profile Channels -outputAnchorPeersUpdate $anchorName -channelID blockr -asOrg $1
+  fi
+  if ! [ -f $anchorName ]; then
     echo "ERROR failed to create Anchor Peer Transaction for $1"
   fi
 }
@@ -251,7 +256,6 @@ rm generate_keys.txt
 echo "----------"
 echo " Generate artifacts from configtx.yaml"
 echo "----------"
-echo " - Genesis block using profile:Genesis"
 
 #cp ./templates/configtx.yaml $FABRIC_CFG_PATH
 blockr_config=$FABRIC_CFG_PATH/configtx.yaml
@@ -301,8 +305,9 @@ while [  $COUNTER -lt $node_count ]; do
   let COUNTER=COUNTER+1
   echo "  - &OrdererOrg$COUNTER" >> $blockr_config 
   anOrderer=$(parse_lookup "$COUNTER" "$orderers")
+  anOrdererName=$(parse_lookup "$COUNTER" "$orderer_names")
   echo -n "    Name: " >> $blockr_config
-  echo $anOrderer >> $blockr_config 
+  echo $anOrdererName >> $blockr_config 
   echo -n "    ID: " >> $blockr_config
   echo $anOrderer >> $blockr_config 
   echo "    AdminPrincipal: Role.ADMIN" >>$blockr_config
@@ -317,8 +322,9 @@ while [  $COUNTER -lt $node_count ]; do
   let COUNTER=COUNTER+1
   echo "  - &Org$COUNTER" >> $blockr_config 
   aPeer=$(parse_lookup "$COUNTER" "$peers")
+  aPeerName=$(parse_lookup "$COUNTER" "$peer_names")
   echo -n "    Name: " >> $blockr_config
-  echo $aPeer >> $blockr_config 
+  echo $aPeerName >> $blockr_config 
   echo -n "    ID: " >> $blockr_config
   echo $aPeer >> $blockr_config 
   echo "    AdminPrincipal: Role.ADMIN" >>$blockr_config
@@ -368,14 +374,23 @@ echo '    "V1.1": true' >> $blockr_config
 echo "  Application: &ApplicationCapabilities" >> $blockr_config
 echo '    "V1.1": true' >> $blockr_config
 
-$FABRIC_PATH/build/bin/configtxgen -profile Genesis -outputBlock $FABRIC_CFG_PATH/genesis.block -channelID system &> /dev/null
-
+echo " - Genesis block using profile:Genesis"
+if [ "$DEBUG" != true ]; then
+  $FABRIC_PATH/build/bin/configtxgen -profile Genesis -outputBlock $FABRIC_CFG_PATH/genesis.block -channelID system &> /dev/null
+else
+  $FABRIC_PATH/build/bin/configtxgen -profile Genesis -outputBlock $FABRIC_CFG_PATH/genesis.block -channelID system
+fi
 if ! [ -f $FABRIC_CFG_PATH/genesis.block ]; then
   echo 'ERROR'
   exit 1
 fi
+
 echo " - Channel block using profile:Channels"
-$FABRIC_PATH/build/bin/configtxgen -profile Channels -outputCreateChannelTx $FABRIC_CFG_PATH/blockr.tx -channelID blockr &> /dev/null
+if [ "$DEBUG" != true ]; then
+  $FABRIC_PATH/build/bin/configtxgen -profile Channels -outputCreateChannelTx $FABRIC_CFG_PATH/blockr.tx -channelID blockr &> /dev/null
+else
+  $FABRIC_PATH/build/bin/configtxgen -profile Channels -outputCreateChannelTx $FABRIC_CFG_PATH/blockr.tx -channelID blockr
+fi
 if ! [ -f $FABRIC_CFG_PATH/blockr.tx ]; then
   echo 'ERROR'
   exit 1
@@ -389,7 +404,7 @@ if [ "$WITH_ANCHOR_PEERS" = true ]; then
   COUNTER=0
   while [  $COUNTER -lt $node_count ]; do
     let COUNTER=COUNTER+1 
-    createAnchor $(parse_lookup "$COUNTER" "$peers")
+    createAnchor $(parse_lookup "$COUNTER" "$peer_names")
   done
 fi
 
