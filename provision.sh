@@ -30,13 +30,26 @@ distribute_conf() {
   echo "----------"
   echo " Distribute configuration to Node $1"
   echo "----------"
-  if [ -d $TEMP_CFG_PATH ]; then
-    rm -rf $TEMP_CFG_PATH
+
+  NODE_CFG_PATH=./$CONFIG_DIR.$1.$3
+  if [ -d $NODE_CFG_PATH ]; then
+    rm -rf $NODE_CFG_PATH
   fi
-  mkdir -p $TEMP_CFG_PATH
-  cp -r $FABRIC_CFG_PATH/* $TEMP_CFG_PATH 
-  cp ./templates/core.yaml $TEMP_CFG_PATH/core.yml.template 
-  cp ./templates/orderer.yaml $TEMP_CFG_PATH/orderer.yml.template 
+  mkdir -p $NODE_CFG_PATH
+  mkdir -p $NODE_CFG_PATH/peerOrganizations/$3
+  cp -r $FABRIC_CFG_PATH/peerOrganizations/$3 ./$NODE_CFG_PATH/peerOrganizations
+  mkdir -p $NODE_CFG_PATH/ordererOrganizations/$3
+  cp -r $FABRIC_CFG_PATH/ordererOrganizations/$3 ./$NODE_CFG_PATH/ordererOrganizations
+  cp ./templates/core.yaml $NODE_CFG_PATH/core.yml.template
+  cp ./templates/orderer.yaml $NODE_CFG_PATH/orderer.yml.template
+  cp $FABRIC_CFG_PATH/genesis.block ./$NODE_CFG_PATH
+  if [ $1 == $lead_node ]; then
+    cp $FABRIC_CFG_PATH/blockr.tx ./$NODE_CFG_PATH
+  fi
+  ANCHOR_PEER_NAME=$FABRIC_CFG_PATH/$5-anchor.tx
+  if [ -f $ANCHOR_PEER_NAME ]; then
+    cp $ANCHOR_PEER_NAME ./$NODE_CFG_PATH
+  fi
 
   CORE_PEER_MSP_PATH=''
   CORE_PEER_TLS_CERT_FILE=''
@@ -56,14 +69,14 @@ distribute_conf() {
     ORDERER_GENERAL_TLS_ROOTCAS="ordererOrganizations/$3/orderers/$1.$3/tls/ca.crt"
   fi
 
-  cat $TEMP_CFG_PATH/core.yml.template | sed "s|PEER_ID|$2| ; s|PEER_ENDPOINT|$1| ; s|PEER_ADDRESS|$1:7051| ; s|PEER_BOOTSTRAP|$1:7051| ; s|WITH_TLS|$WITH_TLS| ; s|PEER_CERT|$CORE_PEER_TLS_CERT_FILE| ; s|PEER_KEY|$CORE_PEER_TLS_KEY_FILE| ; s|PEER_ROOTCERT|$CORE_PEER_TLS_ROOTCERT_FILE| ; s|PEER_MSP_PATH|$CORE_PEER_MSP_PATH| ; s|PEER_MSP_ID|$2| " > $TEMP_CFG_PATH/core.yaml
-  rm $TEMP_CFG_PATH/core.yml.template
+  cat $NODE_CFG_PATH/core.yml.template | sed "s|PEER_ID|$2| ; s|PEER_ENDPOINT|$1| ; s|PEER_ADDRESS|$1:7051| ; s|PEER_BOOTSTRAP|$1:7051| ; s|WITH_TLS|$WITH_TLS| ; s|PEER_CERT|$CORE_PEER_TLS_CERT_FILE| ; s|PEER_KEY|$CORE_PEER_TLS_KEY_FILE| ; s|PEER_ROOTCERT|$CORE_PEER_TLS_ROOTCERT_FILE| ; s|PEER_MSP_PATH|$CORE_PEER_MSP_PATH| ; s|PEER_MSP_ID|$2| " > $NODE_CFG_PATH/core.yaml
+  rm $NODE_CFG_PATH/core.yml.template
 
-  cat $TEMP_CFG_PATH/orderer.yml.template | sed "s:WITH_TLS:$WITH_TLS: ; s:ORDERER_CERT:$ORDERER_GENERAL_TLS_CERTIFICATE: ; s:ORDERER_KEY:$ORDERER_GENERAL_TLS_PRIVATEKEY: ; s:ORDERER_ROOTCERT:$ORDERER_GENERAL_TLS_ROOTCAS: ; s:ORDERER_MSP_PATH:$ORDERER_MSP_PATH: ; s:ORDERER_MSP_ID:$4:   " > $TEMP_CFG_PATH/orderer.yaml
-  rm $TEMP_CFG_PATH/orderer.yml.template
+  cat $NODE_CFG_PATH/orderer.yml.template | sed "s:WITH_TLS:$WITH_TLS: ; s:ORDERER_CERT:$ORDERER_GENERAL_TLS_CERTIFICATE: ; s:ORDERER_KEY:$ORDERER_GENERAL_TLS_PRIVATEKEY: ; s:ORDERER_ROOTCERT:$ORDERER_GENERAL_TLS_ROOTCAS: ; s:ORDERER_MSP_PATH:$ORDERER_MSP_PATH: ; s:ORDERER_MSP_ID:$4:   " > $NODE_CFG_PATH/orderer.yaml
+  rm $NODE_CFG_PATH/orderer.yml.template
 
-  scp -rq $TEMP_CFG_PATH/* $1:$TARGET_CFG_PATH
-  rm -rf $TEMP_CFG_PATH
+  scp -rq $NODE_CFG_PATH/* $1:$TARGET_CFG_PATH
+  rm -rf $NODE_CFG_PATH
 }
 
 prepare() {
