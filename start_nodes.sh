@@ -8,7 +8,7 @@ export MAX_RETRIES=7
 export START_DAEMON_DRIVER_NAME=start_daemon_driver.sh
 export START_NODE_DRIVER_NAME=start_node_driver.sh
 export START_ZOOKEEPER_DRIVER_NAME=start_zookeeper_driver.sh
-export WAIT_SECONDS=5
+export WAIT_SECONDS=4
 
 start_zookeeper() {
   echo '#!/bin/bash' > $START_ZOOKEEPER_DRIVER_NAME
