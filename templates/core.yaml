@@ -6,30 +6,13 @@
 #
 ###############################################################################
 logging:
-#---------
-#    peer:       info 
-#    cauthdsl:   warning
-#    gossip:     debug
-#    ledger:     info
-#    msp:        warning
-#    policies:   warning
-#    grpc:       info
-#---------
-#    peer:       warning 
-#    cauthdsl:   warning 
-#    gossip:     warning 
-#    ledger:     warning 
-#    msp:        warning 
-#    policies:   warning 
-#    grpc:       warning 
-#---------
-    peer:       debug 
-    cauthdsl:   warning 
-    gossip:     warning 
-    ledger:     warning 
-    msp:        warning 
-    policies:   debug 
-    grpc:       debug 
+    peer:       info 
+    cauthdsl:   warning
+    gossip:     debug
+    ledger:     info
+    msp:        warning
+    policies:   warning
+    grpc:       info
     format: '%{color}%{time:2006-01-02 15:04:05.000 MST} [%{module}] %{shortfunc} -> %{level:.4s} %{id:03x}%{color:reset} %{message}'
 peer:
     id: PEER_ID
