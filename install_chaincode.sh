@@ -19,13 +19,9 @@ distribute_chaincode_install() {
   if [ "$WITH_TLS" = true ]; then
     ORDERER_TLS="--tls --cafile $FABRIC_CFG_PATH/ordererOrganizations/$2/orderers/$1.$2/tls/ca.crt"
   fi
-  echo '#!/bin/bash' > $INSTALL_DRIVER_NAME
-  echo '' >> $INSTALL_DRIVER_NAME
-  echo '#----------------' >> $INSTALL_DRIVER_NAME
-  echo '#' >> $INSTALL_DRIVER_NAME
-  echo '# Block R Chaincode Driver' >> $INSTALL_DRIVER_NAME
-  echo '#' >> $INSTALL_DRIVER_NAME
-  echo '#----------------' >> $INSTALL_DRIVER_NAME
+
+  driver_header $INSTALL_DRIVER_NAME 'Block R Install Chaincode Driver'
+
   echo -n 'export FABRIC_PATH=' >> $INSTALL_DRIVER_NAME
   echo $FABRIC_PATH >> $INSTALL_DRIVER_NAME
   echo -n 'export FABRIC_CFG_PATH=' >> $INSTALL_DRIVER_NAME
@@ -54,13 +50,7 @@ distribute_chaincode_install() {
     echo ':7050 $ORDERER_TLS' >> $INSTALL_DRIVER_NAME
   fi
 
-  scp -q ./$INSTALL_DRIVER_NAME $1:
-  ssh $1 "chmod 777 $INSTALL_DRIVER_NAME"
-  ssh $1 "./$INSTALL_DRIVER_NAME"
-  if [ "$DEBUG" != true ]; then
-    ssh $1 "rm ./$INSTALL_DRIVER_NAME"
-  fi
-  rm ./$INSTALL_DRIVER_NAME
+  run_driver $INSTALL_DRIVER_NAME $1
 }
 
 distribute_chaincode_instantiate() {
@@ -74,13 +64,9 @@ distribute_chaincode_instantiate() {
   fi
   export CHAINCODE_ARGS='{"Args":["init","a","100","b","200"]}'
   export CHAINCODE_POLICY="OR('Org1.member', 'Org2.member')"
-  echo '#!/bin/bash' > $INSTANTIATE_DRIVER_NAME
-  echo '' >> $INSTANTIATE_DRIVER_NAME
-  echo '#----------------' >> $INSTANTIATE_DRIVER_NAME
-  echo '#' >> $INSTANTIATE_DRIVER_NAME
-  echo '# Block R Chaincode Driver' >> $INSTANTIATE_DRIVER_NAME
-  echo '#' >> $INSTANTIATE_DRIVER_NAME
-  echo '#----------------' >> $INSTANTIATE_DRIVER_NAME
+
+  driver_header $INSTANTIATE_DRIVER_NAME 'Block R Instantiate Chaincode Driver'
+
   echo -n 'export FABRIC_PATH=' >> $INSTANTIATE_DRIVER_NAME
   echo $FABRIC_PATH >> $INSTANTIATE_DRIVER_NAME
   echo -n 'export FABRIC_CFG_PATH=' >> $INSTANTIATE_DRIVER_NAME
@@ -116,13 +102,7 @@ distribute_chaincode_instantiate() {
     echo ':7050 $ORDERER_TLS' >> $INSTANTIATE_DRIVER_NAME
   fi
 
-  scp -q ./$INSTANTIATE_DRIVER_NAME $1:
-  ssh $1 "chmod 777 $INSTANTIATE_DRIVER_NAME"
-  ssh $1 "./$INSTANTIATE_DRIVER_NAME"
-  if [ "$DEBUG" != true ]; then
-    ssh $1 "rm ./$INSTANTIATE_DRIVER_NAME"
-  fi
-  rm ./$INSTANTIATE_DRIVER_NAME
+  run_driver $INSTANTIATE_DRIVER_NAME $1
 }
 
 echo ".----------------"

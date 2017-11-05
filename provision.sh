@@ -80,13 +80,8 @@ prepare() {
   echo " Preparing Node $1"
   echo "----------"
 
-  echo '#!/bin/bash' > $PREPARE_DRIVER_NAME
-  echo '' >> $PREPARE_DRIVER_NAME
-  echo '#----------------' >> $PREPARE_DRIVER_NAME
-  echo '#' >> $PREPARE_DRIVER_NAME
-  echo '# Block R Preparation Driver' >> $PREPARE_DRIVER_NAME
-  echo '#' >> $PREPARE_DRIVER_NAME
-  echo '#----------------' >> $PREPARE_DRIVER_NAME
+  driver_header $PREPARE_DRIVER_NAME 'Block R Preparation Driver'
+
   echo -n 'export TARGET_CFG_PATH=' >> $PREPARE_DRIVER_NAME 
   echo $TARGET_CFG_PATH >> $PREPARE_DRIVER_NAME 
   echo 'echo " - Stop Hyperledger, CouchDB, Zookeeper and Kafka daemons"' >> $PREPARE_DRIVER_NAME
@@ -102,13 +97,8 @@ prepare() {
   echo 'echo " - Reset configuration $TARGET_CFG_PATH"' >> $PREPARE_DRIVER_NAME
   echo 'rm -rf $TARGET_CFG_PATH' >> $PREPARE_DRIVER_NAME
   echo 'mkdir $TARGET_CFG_PATH' >> $PREPARE_DRIVER_NAME
-  scp -q ./$PREPARE_DRIVER_NAME $1: 
-  ssh $1 "chmod 777 $PREPARE_DRIVER_NAME"
-  ssh $1 "./$PREPARE_DRIVER_NAME"
-  if [ "$DEBUG" != true ]; then
-    ssh $1 "rm ./$PREPARE_DRIVER_NAME"
-  fi
-  rm ./$PREPARE_DRIVER_NAME
+
+  run_driver $PREPARE_DRIVER_NAME $1
 }
 
 reset() {
@@ -120,13 +110,9 @@ reset() {
   cat $TEMP_CFG_PATH/server.properties.template | sed "s|BROKER_ID|$2| ; s|SERVER_ADDRESS|$1| ; s|ZOOKEEPER_CONNECT|$3| " > $TEMP_CFG_PATH/server.properties
   scp -q $TEMP_CFG_PATH/server.properties $1:/opt/kafka_2.11-0.10.2.0/config 
   scp -q $TEMP_CFG_PATH/zookeeper.properties $1:/opt/kafka_2.11-0.10.2.0/config 
-  echo '#!/bin/bash' > $RESET_DRIVER_NAME
-  echo '' >> $RESET_DRIVER_NAME
-  echo '#----------------' >> $RESET_DRIVER_NAME
-  echo '#' >> $RESET_DRIVER_NAME
-  echo '# Block R Reset Driver' >> $RESET_DRIVER_NAME
-  echo '#' >> $RESET_DRIVER_NAME
-  echo '#----------------' >> $RESET_DRIVER_NAME
+
+  driver_header $RESET_DRIVER_NAME 'Block R Reset Driver'
+
   echo -n 'export HYPERLEDGER_DIR=' >> $RESET_DRIVER_NAME 
   echo $HYPERLEDGER_DIR >> $RESET_DRIVER_NAME 
   echo -n 'export KAFKA_DIR=' >> $RESET_DRIVER_NAME 
@@ -153,13 +139,7 @@ reset() {
   echo '  sudo rm -rf $KAFKA_DIR' >> $RESET_DRIVER_NAME
   echo 'fi' >> $RESET_DRIVER_NAME
 
-  scp -q ./$RESET_DRIVER_NAME $1: 
-  ssh $1 "chmod 777 $RESET_DRIVER_NAME"
-  ssh $1 "./$RESET_DRIVER_NAME"
-  if [ "$DEBUG" != true ]; then
-    ssh $1 "rm ./$RESET_DRIVER_NAME"
-  fi
-  rm ./$RESET_DRIVER_NAME
+  run_driver $RESET_DRIVER_NAME $1
 }
 
 echo ".----------------"

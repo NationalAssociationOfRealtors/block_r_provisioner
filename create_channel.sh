@@ -19,13 +19,9 @@ create_channel() {
   if [ "$WITH_TLS" = true ]; then
     ORDERER_TLS=" --tls --cafile $FABRIC_CFG_PATH/ordererOrganizations/$3/orderers/$1.$3/tls/ca.crt"
   fi
-  echo '#!/bin/bash' > $CREATE_CHANNEL_DRIVER_NAME
-  echo '' >> $CREATE_CHANNEL_DRIVER_NAME
-  echo '#----------------' >> $CREATE_CHANNEL_DRIVER_NAME
-  echo '#' >> $CREATE_CHANNEL_DRIVER_NAME
-  echo '# Block R Create Channel Driver' >> $CREATE_CHANNEL_DRIVER_NAME
-  echo '#' >> $CREATE_CHANNEL_DRIVER_NAME
-  echo '#----------------' >> $CREATE_CHANNEL_DRIVER_NAME
+
+  driver_header $CREATE_CHANNEL_DRIVER_NAME 'Block R Channel Driver'
+
   echo -n 'export CORE_PEER_MSPCONFIGPATH=' >> $CREATE_CHANNEL_DRIVER_NAME
   echo -n $FABRIC_CFG_PATH >> $CREATE_CHANNEL_DRIVER_NAME
   echo -n '/peerOrganizations/' >> $CREATE_CHANNEL_DRIVER_NAME
@@ -69,13 +65,7 @@ create_channel() {
   echo 'fi' >> $CREATE_CHANNEL_DRIVER_NAME
   echo 'mv blockr.block $FABRIC_CFG_PATH' >> $CREATE_CHANNEL_DRIVER_NAME
 
-  scp -q ./$CREATE_CHANNEL_DRIVER_NAME $1:
-  ssh $1 "chmod 777 $CREATE_CHANNEL_DRIVER_NAME"
-  ssh $1 "./$CREATE_CHANNEL_DRIVER_NAME"
-  if [ "$DEBUG" != true ]; then
-   ssh $1 "rm ./$CREATE_CHANNEL_DRIVER_NAME"
-  fi
-  rm ./$CREATE_CHANNEL_DRIVER_NAME
+  run_driver $CREATE_CHANNEL_DRIVER_NAME $1
 }
 
 join_channel() {
@@ -87,13 +77,9 @@ join_channel() {
   if [ "$WITH_TLS" = true ]; then
     ORDERER_TLS=" --tls --cafile $FABRIC_CFG_PATH/ordererOrganizations/$3/orderers/$1.$3/tls/ca.crt"
   fi
-  echo '#!/bin/bash' > $JOIN_CHANNEL_DRIVER_NAME
-  echo '' >> $JOIN_CHANNEL_DRIVER_NAME
-  echo '#----------------' >> $JOIN_CHANNEL_DRIVER_NAME
-  echo '#' >> $JOIN_CHANNEL_DRIVER_NAME
-  echo '# Block R Join Channel Driver' >> $JOIN_CHANNEL_DRIVER_NAME
-  echo '#' >> $JOIN_CHANNEL_DRIVER_NAME
-  echo '#----------------' >> $JOIN_CHANNEL_DRIVER_NAME
+
+  driver_header $JOIN_CHANNEL_DRIVER_NAME 'Block R Join Channel Driver'
+
   echo -n 'export ANCHOR_PEER_NAME=' >> $JOIN_CHANNEL_DRIVER_NAME
   echo -n $2 >> $JOIN_CHANNEL_DRIVER_NAME
   echo '-anchor.tx' >> $JOIN_CHANNEL_DRIVER_NAME
@@ -124,7 +110,7 @@ join_channel() {
   echo 'fi' >> $JOIN_CHANNEL_DRIVER_NAME
   echo 'rm joined_channels.txt' >> $JOIN_CHANNEL_DRIVER_NAME
   echo 'if ! [ -f $FABRIC_CFG_PATH/blockr.block ]; then' >> $JOIN_CHANNEL_DRIVER_NAME
-  echo '  echo " - Fetch missing channel definition"' >> $JOIN_CHANNEL_DRIVER_NAME
+  echo '  echo " - Fetch channel definition"' >> $JOIN_CHANNEL_DRIVER_NAME
 #  echo -n '  $FABRIC_PATH/build/bin/peer channel fetch 0 $FABRIC_CFG_PATH/blockr.block -c blockr -o ' >> $JOIN_CHANNEL_DRIVER_NAME
   echo -n '  $FABRIC_PATH/build/bin/peer channel fetch oldest $FABRIC_CFG_PATH/blockr.block -c blockr -o ' >> $JOIN_CHANNEL_DRIVER_NAME
   echo -n $1 >> $JOIN_CHANNEL_DRIVER_NAME
@@ -158,13 +144,7 @@ join_channel() {
   fi
   echo 'fi' >> $JOIN_CHANNEL_DRIVER_NAME
 
-  scp -q ./$JOIN_CHANNEL_DRIVER_NAME $1:
-  ssh $1 "chmod 777 $JOIN_CHANNEL_DRIVER_NAME"
-  ssh $1 "./$JOIN_CHANNEL_DRIVER_NAME"
-  if [ "$DEBUG" != true ]; then
-   ssh $1 "rm ./$JOIN_CHANNEL_DRIVER_NAME"
-  fi
-  rm ./$JOIN_CHANNEL_DRIVER_NAME
+  run_driver $JOIN_CHANNEL_DRIVER_NAME $1
 }
 
 echo ".----------------"

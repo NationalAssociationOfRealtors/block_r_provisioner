@@ -5,18 +5,26 @@ export STOP_DAEMON_DRIVER_NAME=stop_daemon_driver.sh
 export STOP_NODE_DRIVER_NAME=stop_node_driver.sh
 export STOP_ZOOKEEPER_DRIVER_NAME=stop_zookeeper_driver.sh
 
+stop_process() {
+  echo -n 'echo -n " - ' >> $1
+  echo -n $2 >> $1
+  echo ' - "' >> $1
+  echo -n 'if $(/usr/bin/systemctl -q is-active ' >> $1
+  echo -n $3 >> $1
+  echo ') ; then' >> $1
+  echo "  sudo systemctl stop $3" >> $1
+  echo '  echo "Stopped"' >> $1
+  echo 'else' >> $1
+  echo '  echo "Not running"' >> $1
+  echo 'fi' >> $1
+}
+
 shutdown_node() {
   echo "----------"
   echo " Shutdown Node $1"
   echo "----------"
 
-  echo '#!/bin/bash' > $STOP_NODE_DRIVER_NAME
-  echo '' >> $STOP_NODE_DRIVER_NAME
-  echo '#----------------' >> $STOP_NODE_DRIVER_NAME
-  echo '#' >> $STOP_NODE_DRIVER_NAME
-  echo '# Block R Stop Node Driver' >> $STOP_NODE_DRIVER_NAME
-  echo '#' >> $STOP_NODE_DRIVER_NAME
-  echo '#----------------' >> $STOP_NODE_DRIVER_NAME
+  driver_header $STOP_NODE_DRIVER_NAME 'Block R Stop Node Driver'
 
   echo 'echo -n " - Orderer "' >> $STOP_NODE_DRIVER_NAME
   echo 'sudo pkill orderer' >> $STOP_NODE_DRIVER_NAME
@@ -25,13 +33,7 @@ shutdown_node() {
   echo 'sudo pkill peer' >> $STOP_NODE_DRIVER_NAME
   echo 'echo "- Stopped"' >> $STOP_NODE_DRIVER_NAME
 
-  scp -q ./$STOP_NODE_DRIVER_NAME $1: 
-  ssh $1 "chmod 777 $STOP_NODE_DRIVER_NAME"
-  ssh $1 "./$STOP_NODE_DRIVER_NAME"
-  if [ "$DEBUG" != true ]; then
-    ssh $1 "rm ./$STOP_NODE_DRIVER_NAME"
-  fi
-  rm ./$STOP_NODE_DRIVER_NAME
+  run_driver $STOP_NODE_DRIVER_NAME $1
 }
 
 shutdown_daemons() {
@@ -39,65 +41,21 @@ shutdown_daemons() {
   echo " Stopping daemons on $1"
   echo "----------"
 
-  echo '#!/bin/bash' > $STOP_DAEMON_DRIVER_NAME
-  echo '' >> $STOP_DAEMON_DRIVER_NAME
-  echo '#----------------' >> $STOP_DAEMON_DRIVER_NAME
-  echo '#' >> $STOP_DAEMON_DRIVER_NAME
-  echo '# Block R Stop Daemon Driver' >> $STOP_DAEMON_DRIVER_NAME
-  echo '#' >> $STOP_DAEMON_DRIVER_NAME
-  echo '#----------------' >> $STOP_DAEMON_DRIVER_NAME
+  driver_header $STOP_DAEMON_DRIVER_NAME 'Block R Stop Daemon Driver'
 
-  echo 'echo -n " - CouchDB "' >> $STOP_DAEMON_DRIVER_NAME
-  echo 'if $(/usr/bin/systemctl -q is-active couchdb) ; then' >> $STOP_DAEMON_DRIVER_NAME
-  #echo '  sudo /etc/init.d/couchdb stop &> /dev/null' >> $STOP_DAEMON_DRIVER_NAME
-  echo '  sudo systemctl stop couchdb' >> $STOP_DAEMON_DRIVER_NAME
-  echo '  echo "- Stopped"' >> $STOP_DAEMON_DRIVER_NAME
-  echo 'else' >> $STOP_DAEMON_DRIVER_NAME
-  echo '  echo "- Not running"' >> $STOP_DAEMON_DRIVER_NAME
-  echo 'fi' >> $STOP_DAEMON_DRIVER_NAME
+  stop_process $STOP_DAEMON_DRIVER_NAME CouchDB couchdb 
+  stop_process $STOP_DAEMON_DRIVER_NAME Kafka kafka 
 
-  echo 'echo -n " - Kafka "' >> $STOP_DAEMON_DRIVER_NAME
-  echo 'if $(/usr/bin/systemctl -q is-active kafka) ; then' >> $STOP_DAEMON_DRIVER_NAME
-  echo '  sudo systemctl stop kafka' >> $STOP_DAEMON_DRIVER_NAME
-  echo '  echo "- Stopped"' >> $STOP_DAEMON_DRIVER_NAME
-  echo 'else' >> $STOP_DAEMON_DRIVER_NAME
-  echo '  echo "- Not running"' >> $STOP_DAEMON_DRIVER_NAME
-  echo 'fi' >> $STOP_DAEMON_DRIVER_NAME
-
-  scp -q ./$STOP_DAEMON_DRIVER_NAME $1: 
-  ssh $1 "chmod 777 $STOP_DAEMON_DRIVER_NAME"
-  ssh $1 "./$STOP_DAEMON_DRIVER_NAME"
-  if [ "$DEBUG" != true ]; then
-    ssh $1 "rm ./$STOP_DAEMON_DRIVER_NAME"
-  fi
-  rm ./$STOP_DAEMON_DRIVER_NAME
+  run_driver $STOP_DAEMON_DRIVER_NAME $1
 }
  
 shutdown_zookeeper() {
-  echo '#!/bin/bash' > $STOP_ZOOKEEPER_DRIVER_NAME
-  echo '' >> $STOP_ZOOKEEPER_DRIVER_NAME
-  echo '#----------------' >> $STOP_ZOOKEEPER_DRIVER_NAME
-  echo '#' >> $STOP_ZOOKEEPER_DRIVER_NAME
-  echo '# Block R Stop Zookeeper Driver' >> $STOP_ZOOKEEPER_DRIVER_NAME
-  echo '#' >> $STOP_ZOOKEEPER_DRIVER_NAME
-  echo '#----------------' >> $STOP_ZOOKEEPER_DRIVER_NAME
-  echo -n 'echo -n " - ' >> $STOP_ZOOKEEPER_DRIVER_NAME
-  echo -n $1 >> $STOP_ZOOKEEPER_DRIVER_NAME
-  echo ' - "' >> $STOP_ZOOKEEPER_DRIVER_NAME
-  echo 'if $(/usr/bin/systemctl -q is-active zookeeper) ; then' >> $STOP_ZOOKEEPER_DRIVER_NAME
-  echo '  sudo systemctl stop zookeeper' >> $STOP_ZOOKEEPER_DRIVER_NAME
-  echo '  echo "Stopped"' >> $STOP_ZOOKEEPER_DRIVER_NAME
-  echo 'else' >> $STOP_ZOOKEEPER_DRIVER_NAME
-  echo '  echo "Not running"' >> $STOP_ZOOKEEPER_DRIVER_NAME
-  echo 'fi' >> $STOP_ZOOKEEPER_DRIVER_NAME
 
-  scp -q ./$STOP_ZOOKEEPER_DRIVER_NAME $1: 
-  ssh $1 "chmod 777 $STOP_ZOOKEEPER_DRIVER_NAME"
-  ssh $1 "./$STOP_ZOOKEEPER_DRIVER_NAME"
-  if [ "$DEBUG" != true ]; then
-    ssh $1 "rm ./$STOP_ZOOKEEPER_DRIVER_NAME"
-  fi
-  rm ./$STOP_ZOOKEEPER_DRIVER_NAME
+  driver_header $STOP_ZOOKEEPER_DRIVER_NAME 'Block R Stop Zookeeper Driver'
+
+  stop_process $STOP_ZOOKEEPER_DRIVER_NAME $1 zookeeper 
+
+  run_driver $STOP_ZOOKEEPER_DRIVER_NAME $1
 }
  
 echo ".----------------"

@@ -27,3 +27,23 @@ for n in $zookeepers; do
   let zookeeper_count=zookeeper_count+1
 done
 
+run_driver() {
+  scp -q ./$1 $2:
+  ssh $2 "chmod 777 $1"
+  ssh $2 "./$1"
+  if [ "$DEBUG" != true ]; then
+    ssh $2 "rm ./$1"
+  fi
+  rm ./$1
+}
+
+driver_header() {
+  echo '#!/bin/bash' > $1
+  echo '' >> $1
+  echo '#----------------' >> $1
+  echo '#' >> $1
+  echo "# $2" >> $1
+  echo '#' >> $1
+  echo '#----------------' >> $1
+}
+
