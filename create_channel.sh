@@ -1,14 +1,14 @@
 #!/bin/bash
 
-export CONFIG_DIR=blockr_config
-export DEBUG=false
-export DELAY_TIME=60
-export FABRIC_PATH=$GOPATH/src/github.com/hyperledger/fabric
-export FABRIC_CFG_PATH=$FABRIC_PATH/$CONFIG_DIR
-export CREATE_ANCHOR_DRIVER_NAME=create_anchor_driver.sh
-export CREATE_CHANNEL_DRIVER_NAME=create_channel_driver.sh
-export JOIN_CHANNEL_DRIVER_NAME=join_channel_driver.sh
-export WITH_TLS=true
+CONFIG_DIR=blockr_config
+DEBUG=false
+DELAY_TIME=60
+FABRIC_PATH=$GOPATH/src/github.com/hyperledger/fabric
+FABRIC_CFG_PATH=$FABRIC_PATH/$CONFIG_DIR
+CREATE_ANCHOR_DRIVER_NAME=create_anchor_driver.sh
+CREATE_CHANNEL_DRIVER_NAME=create_channel_driver.sh
+JOIN_CHANNEL_DRIVER_NAME=join_channel_driver.sh
+WITH_TLS=true
 
 create_channel() {
   echo "----------"

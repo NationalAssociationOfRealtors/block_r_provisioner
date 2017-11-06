@@ -1,9 +1,9 @@
 #!/bin/bash
 
-export DEBUG=false
-export STOP_DAEMON_DRIVER_NAME=stop_daemon_driver.sh
-export STOP_NODE_DRIVER_NAME=stop_node_driver.sh
-export STOP_ZOOKEEPER_DRIVER_NAME=stop_zookeeper_driver.sh
+DEBUG=false
+STOP_DAEMON_DRIVER_NAME=stop_daemon_driver.sh
+STOP_NODE_DRIVER_NAME=stop_node_driver.sh
+STOP_ZOOKEEPER_DRIVER_NAME=stop_zookeeper_driver.sh
 
 stop_process() {
   echo -n 'echo -n " - ' >> $1

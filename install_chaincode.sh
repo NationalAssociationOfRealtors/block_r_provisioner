@@ -1,14 +1,14 @@
 #!/bin/bash
 
-export CHAINCODE_ID='exampleCC -v 1.0'
-export CHAINCODE_PATH='github.com/hyperledger/fabric/examples/chaincode/go/chaincode_example02'
-export CONFIG_DIR=blockr_config
-export DEBUG=false
-export FABRIC_PATH=$GOPATH/src/github.com/hyperledger/fabric
-export FABRIC_CFG_PATH=$FABRIC_PATH/$CONFIG_DIR
-export INSTALL_DRIVER_NAME=install_chaincode_driver.sh
-export INSTANTIATE_DRIVER_NAME=instantiate_chaincode_driver.sh
-export WITH_TLS=true
+CHAINCODE_ID='exampleCC -v 1.0'
+CHAINCODE_PATH='github.com/hyperledger/fabric/examples/chaincode/go/chaincode_example02'
+CONFIG_DIR=blockr_config
+DEBUG=false
+FABRIC_PATH=$GOPATH/src/github.com/hyperledger/fabric
+FABRIC_CFG_PATH=$FABRIC_PATH/$CONFIG_DIR
+INSTALL_DRIVER_NAME=install_chaincode_driver.sh
+INSTANTIATE_DRIVER_NAME=instantiate_chaincode_driver.sh
+WITH_TLS=true
 
 distribute_chaincode_install() {
   echo "----------"

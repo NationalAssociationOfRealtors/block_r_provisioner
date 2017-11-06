@@ -1,18 +1,19 @@
 #!/bin/bash
 
-export CONFIG_DIR=blockr_config
-export DEBUG=false
+CONFIG_DIR=blockr_config
+DEBUG=false
+FABRIC_PATH=$GOPATH/src/github.com/hyperledger/fabric
+KAFKA_DIR=/var/kafka-logs
+HYPERLEDGER_DIR=/var/hyperledger
+PREPARE_DRIVER_NAME=prepare_node_driver.sh
+RESET_DRIVER_NAME=reset_node_driver.sh
+TARGET_CFG_PATH=$FABRIC_PATH/$CONFIG_DIR
+TEMP_CFG_PATH=./$CONFIG_DIR.temp
+WITH_ANCHOR_PEERS=true
+WITH_TLS=true
+ZOOKEEPER_DIR=/var/zookeeper
+
 export FABRIC_CFG_PATH=./$CONFIG_DIR
-export FABRIC_PATH=$GOPATH/src/github.com/hyperledger/fabric
-export KAFKA_DIR=/var/kafka-logs
-export HYPERLEDGER_DIR=/var/hyperledger
-export PREPARE_DRIVER_NAME=prepare_node_driver.sh
-export RESET_DRIVER_NAME=reset_node_driver.sh
-export TARGET_CFG_PATH=$FABRIC_PATH/$CONFIG_DIR
-export TEMP_CFG_PATH=./$CONFIG_DIR.temp
-export WITH_ANCHOR_PEERS=true
-export WITH_TLS=true
-export ZOOKEEPER_DIR=/var/zookeeper
 
 createAnchor() {
   ANCHOR_PEER_NAME=$FABRIC_CFG_PATH/$1-anchor.tx

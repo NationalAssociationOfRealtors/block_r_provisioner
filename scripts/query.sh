@@ -1,8 +1,10 @@
+#!/bin/bash
 
-export CONFIG_DIR=blockr_config
-export FABRIC_PATH=/work/projects/go/src/github.com/hyperledger/fabric
+CONFIG_DIR=blockr_config
+FABRIC_PATH=/work/projects/go/src/github.com/hyperledger/fabric
+WITH_TLS=true
+
 export FABRIC_CFG_PATH=$FABRIC_PATH/$CONFIG_DIR
-export WITH_TLS=true
 
 ORDERER_TLS=''
 if [ "$WITH_TLS" = true ]; then

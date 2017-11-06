@@ -1,14 +1,14 @@
 #!/bin/bash
 
-export CONFIG_DIR=blockr_config
-export DEBUG=false
-export FABRIC_PATH=$GOPATH/src/github.com/hyperledger/fabric
-export FABRIC_CFG_PATH=$FABRIC_PATH/$CONFIG_DIR
-export MAX_RETRIES=7
-export START_DAEMON_DRIVER_NAME=start_daemon_driver.sh
-export START_NODE_DRIVER_NAME=start_node_driver.sh
-export START_ZOOKEEPER_DRIVER_NAME=start_zookeeper_driver.sh
-export WAIT_SECONDS=3
+CONFIG_DIR=blockr_config
+DEBUG=false
+FABRIC_PATH=$GOPATH/src/github.com/hyperledger/fabric
+FABRIC_CFG_PATH=$FABRIC_PATH/$CONFIG_DIR
+MAX_RETRIES=7
+START_DAEMON_DRIVER_NAME=start_daemon_driver.sh
+START_NODE_DRIVER_NAME=start_node_driver.sh
+START_ZOOKEEPER_DRIVER_NAME=start_zookeeper_driver.sh
+WAIT_SECONDS=3
 
 daemon_control() {
   echo 'start_daemon() {' >> $1
