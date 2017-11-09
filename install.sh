@@ -36,7 +36,7 @@ echo -n 'chown -R $(whoami):$(whoami) ' >> $INSTALL_DRIVER_NAME
 echo $FABRIC >> $INSTALL_DRIVER_NAME
 echo -n 'git clone https://github.com/hyperledger/fabric ' >> $INSTALL_DRIVER_NAME
 echo $FABRIC >> $INSTALL_DRIVER_NAME
-echo 'cd ' >> $INSTALL_DRIVER_NAME
+echo -n 'cd ' >> $INSTALL_DRIVER_NAME
 echo $FABRIC >> $INSTALL_DRIVER_NAME
 if [ "$MASTER_BRANCH" != true ]; then
   echo 'git checkout master' >> $INSTALL_DRIVER_NAME 
