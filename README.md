@@ -19,6 +19,7 @@ This tool was created to help maintain the regional Block R processing nodes.  H
 - Ability to ssh without having to enter a password from the machine that runs this script
 - Ability of nodes to resolve each other's DNS names
 - Installed and operatonal Apache Kafka at least at level 0.10.2.0 
+- Docker at least at level 17.09.0-ce
 
 ---
 
