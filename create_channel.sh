@@ -125,12 +125,14 @@ join_channel() {
   echo -n $1 >> $JOIN_CHANNEL_DRIVER_NAME
   echo ':7050 $ORDERER_TLS &> joined_channels.txt' >> $JOIN_CHANNEL_DRIVER_NAME
   if [ "$DEBUG" == true ]; then
+    echo "echo '--- LOK ---'" >> $JOIN_CHANNEL_DRIVER_NAME
     echo 'cat joined_channels.txt' >> $JOIN_CHANNEL_DRIVER_NAME
   fi
+  echo 'if grep -q "Successfully submitted" joined_channels.txt; then' >> $JOIN_CHANNEL_DRIVER_NAME
+  echo '  echo " - Peer joined the channel!"' >> $JOIN_CHANNEL_DRIVER_NAME
+  echo 'fi' >> $JOIN_CHANNEL_DRIVER_NAME
   echo 'if grep -q "Peer joined the channel!" joined_channels.txt; then' >> $JOIN_CHANNEL_DRIVER_NAME
   echo '  echo " - Peer joined the channel!"' >> $JOIN_CHANNEL_DRIVER_NAME
-  echo '  rm joined_channels.txt' >> $JOIN_CHANNEL_DRIVER_NAME
-  echo '  exit 1' >> $JOIN_CHANNEL_DRIVER_NAME
   echo 'fi' >> $JOIN_CHANNEL_DRIVER_NAME
   echo 'rm joined_channels.txt' >> $JOIN_CHANNEL_DRIVER_NAME
   echo 'if [ -f $FABRIC_CFG_PATH/$ANCHOR_PEER_NAME ]; then' >> $JOIN_CHANNEL_DRIVER_NAME
