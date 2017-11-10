@@ -2,7 +2,7 @@
 export DEBUG=false
 export FABRIC=$GOPATH/src/github.com/hyperledger/fabric
 export INSTALL_DRIVER_NAME=install_blockr_driver.sh
-export MASTER_BRANCH=true
+export MASTER_BRANCH=false
 
 echo ".----------------"
 echo "|"
@@ -38,9 +38,14 @@ echo -n 'git clone https://github.com/hyperledger/fabric ' >> $INSTALL_DRIVER_NA
 echo $FABRIC >> $INSTALL_DRIVER_NAME
 echo -n 'cd ' >> $INSTALL_DRIVER_NAME
 echo $FABRIC >> $INSTALL_DRIVER_NAME
-if [ "$MASTER_BRANCH" != true ]; then
+if [ "$MASTER_BRANCH" == true ]; then
+  echo 'Change to the master branch' >> $INSTALL_DRIVER_NAME 
   echo 'git checkout master' >> $INSTALL_DRIVER_NAME 
 fi
+echo -n 'export GOPATH=' >> $INSTALL_DRIVER_NAME
+echo $GOPATH >> $INSTALL_DRIVER_NAME
+echo -n 'export PATH=' >> $INSTALL_DRIVER_NAME
+echo $PATH >> $INSTALL_DRIVER_NAME
 echo 'make native' >> $INSTALL_DRIVER_NAME 
 echo 'echo " - Install systemd scripts"' >> $INSTALL_DRIVER_NAME
 echo -n 'sudo cp ' >> $INSTALL_DRIVER_NAME
