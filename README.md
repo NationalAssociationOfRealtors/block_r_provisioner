@@ -2,20 +2,20 @@
 
 This tool was created to help maintain the regional Block R processing nodes.  Here are some notes:
 
-- Each processing node consists of a single orderer and a single peer
+- Each processing node consists of a single orderer and a single peer.
+- Optimized for an odd number of nodes to facilitate consensus.
 - Hyperledger Fabric will be installed on each node
 - The network can be specified to communicate with or without TLS.   
 - Only one channel is defined. 
+- Tested with Centos 7, other distributions might need adjustments. 
 
 ---
 
 **Prerequisites**
 
 - Local git repo of Hyperledger Fabric in `$GOPATH/src/github.com/hyperledger/fabric`
-- Empty physical servers/virtual machines to be used as a solo ordering service and peers
-- Tested with Centos 7, other distributions might also work
 - git client installed on the servers
-- Ability to do "sudo" without having to enter a password on the servers
+- Ability to do "sudo" without having to enter a password on the servers.  One way to do this is to add the user account to the `wheel` group.
 - Ability to ssh without having to enter a password from the machine that runs this script
 - Ability of nodes to resolve each other's DNS names
 - Installed and operatonal Apache Kafka at least at level 0.10.2.0 
@@ -31,7 +31,15 @@ This tool was created to help maintain the regional Block R processing nodes.  H
 `cp $GOPATH/bin/protoc-gen-go $GOPATH/src/github.com/hyperledger/fabric/build/docker/gotools/bin`
 - If you would like to work from the Hyperledger Fabric master channel, change the `MASTER_BRANCH` variable to `true`
 - Setting the `DEBUG` to `true` will leave a copy of script in the home directory to give you a chance to instapect the file.   
-3. Edit `blockr-config.yaml` and `confitx.yaml` in the templates directory with the hostnames of the servers that are to be used as nodes 
+3. Edit `config.sh` in the root directory with the following information: 
+- zookeepers: a space delimited list of server names that run zookeeper.  For eample, "vm1 vm2"
+- nodes: a space delimited list of server names that are regional nodes.  For eample, "west1 central1 east2"
+- domains: a space delimited list of domain names representing regional nodes.  For eample, "west.blockr central.blockr east.blockr"
+- orderer_names: a space delimited list of names representing orderers.  For eample, "WEST-Orderer-0 CENTRAL-Orderer-0 EAST-Orderer-0"
+- orderers: a space delimited list of names representing orderer MSPs.  For eample, "Orderer1MSP Orderer2MSP Orderer3MSP"
+- peer_names: a space delimited list of names representing peers.  For eample, "WEST-Peer-0 CENTRAL-Peer-0 EAST-Peer-0"
+- peers: a space delimited list of names representing peer MSPs.  For eample, "Org1MSP Org2MSP Org3MSP"
+
 4. Provision the system using the instructions below. 
 
 ---
