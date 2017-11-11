@@ -36,6 +36,7 @@ create_channel() {
   echo -n 'export ORDERER_TLS="' >> $CREATE_CHANNEL_DRIVER_NAME
   echo -n $ORDERER_TLS >> $CREATE_CHANNEL_DRIVER_NAME
   echo '"' >> $CREATE_CHANNEL_DRIVER_NAME
+
   echo -n '$FABRIC_PATH/build/bin/peer channel list -o ' >> $CREATE_CHANNEL_DRIVER_NAME
   echo -n $1 >> $CREATE_CHANNEL_DRIVER_NAME
   echo ':7050 $ORDERER_TLS &> joined_channels.txt' >> $CREATE_CHANNEL_DRIVER_NAME
@@ -48,6 +49,7 @@ create_channel() {
   echo '  exit 1' >> $CREATE_CHANNEL_DRIVER_NAME
   echo 'fi' >> $CREATE_CHANNEL_DRIVER_NAME
   echo 'rm joined_channels.txt' >> $CREATE_CHANNEL_DRIVER_NAME
+
   echo 'echo " - Create the channel block"' >> $CREATE_CHANNEL_DRIVER_NAME
   echo -n '$FABRIC_PATH/build/bin/peer channel create -f $FABRIC_CFG_PATH/blockr.tx -c blockr -o ' >> $CREATE_CHANNEL_DRIVER_NAME
   echo -n $1 >> $CREATE_CHANNEL_DRIVER_NAME
@@ -97,6 +99,7 @@ join_channel() {
   echo -n 'export ORDERER_TLS="' >> $JOIN_CHANNEL_DRIVER_NAME
   echo -n $ORDERER_TLS >> $JOIN_CHANNEL_DRIVER_NAME
   echo '"' >> $JOIN_CHANNEL_DRIVER_NAME
+
   echo -n '$FABRIC_PATH/build/bin/peer channel list -o ' >> $JOIN_CHANNEL_DRIVER_NAME
   echo -n $1 >> $JOIN_CHANNEL_DRIVER_NAME
   echo ':7050 $ORDERER_TLS &> joined_channels.txt' >> $JOIN_CHANNEL_DRIVER_NAME
@@ -109,8 +112,11 @@ join_channel() {
   echo '  exit 1' >> $JOIN_CHANNEL_DRIVER_NAME
   echo 'fi' >> $JOIN_CHANNEL_DRIVER_NAME
   echo 'rm joined_channels.txt' >> $JOIN_CHANNEL_DRIVER_NAME
-  echo 'if ! [ -f $FABRIC_CFG_PATH/blockr.block ]; then' >> $JOIN_CHANNEL_DRIVER_NAME
-  echo '  echo " - Fetch channel definition"' >> $JOIN_CHANNEL_DRIVER_NAME
+
+  echo 'if [ -f $FABRIC_CFG_PATH/blockr.block ]; then' >> $JOIN_CHANNEL_DRIVER_NAME
+  echo '  echo " - Use channel block"' >> $JOIN_CHANNEL_DRIVER_NAME
+  echo 'else' >> $JOIN_CHANNEL_DRIVER_NAME
+  echo '  echo " - Fetch channel block"' >> $JOIN_CHANNEL_DRIVER_NAME
 #  echo -n '  $FABRIC_PATH/build/bin/peer channel fetch 0 $FABRIC_CFG_PATH/blockr.block -c blockr -o ' >> $JOIN_CHANNEL_DRIVER_NAME
   echo -n '  $FABRIC_PATH/build/bin/peer channel fetch oldest $FABRIC_CFG_PATH/blockr.block -c blockr -o ' >> $JOIN_CHANNEL_DRIVER_NAME
   echo -n $1 >> $JOIN_CHANNEL_DRIVER_NAME
@@ -120,21 +126,25 @@ join_channel() {
     echo ':7050 $ORDERER_TLS' >> $JOIN_CHANNEL_DRIVER_NAME
   fi
   echo 'fi' >> $JOIN_CHANNEL_DRIVER_NAME
-  echo 'echo " - Join the channel"' >> $JOIN_CHANNEL_DRIVER_NAME
   echo -n '$FABRIC_PATH/build/bin/peer channel join -b $FABRIC_CFG_PATH/blockr.block -o ' >> $JOIN_CHANNEL_DRIVER_NAME
+  echo -n $1 >> $JOIN_CHANNEL_DRIVER_NAME
+  if [ "$DEBUG" != true ]; then
+    echo ':7050 $ORDERER_TLS &> /dev/null' >> $JOIN_CHANNEL_DRIVER_NAME
+  else 
+    echo ':7050 $ORDERER_TLS' >> $JOIN_CHANNEL_DRIVER_NAME
+  fi
+
+  echo -n '$FABRIC_PATH/build/bin/peer channel list -o ' >> $JOIN_CHANNEL_DRIVER_NAME
   echo -n $1 >> $JOIN_CHANNEL_DRIVER_NAME
   echo ':7050 $ORDERER_TLS &> joined_channels.txt' >> $JOIN_CHANNEL_DRIVER_NAME
   if [ "$DEBUG" == true ]; then
-    echo "echo '--- LOK ---'" >> $JOIN_CHANNEL_DRIVER_NAME
     echo 'cat joined_channels.txt' >> $JOIN_CHANNEL_DRIVER_NAME
   fi
-  echo 'if grep -q "Successfully submitted" joined_channels.txt; then' >> $JOIN_CHANNEL_DRIVER_NAME
-  echo '  echo " - Peer joined the channel!"' >> $JOIN_CHANNEL_DRIVER_NAME
-  echo 'fi' >> $JOIN_CHANNEL_DRIVER_NAME
-  echo 'if grep -q "Peer joined the channel!" joined_channels.txt; then' >> $JOIN_CHANNEL_DRIVER_NAME
+  echo 'if grep -q blockr joined_channels.txt; then' >> $JOIN_CHANNEL_DRIVER_NAME
   echo '  echo " - Peer joined the channel!"' >> $JOIN_CHANNEL_DRIVER_NAME
   echo 'fi' >> $JOIN_CHANNEL_DRIVER_NAME
   echo 'rm joined_channels.txt' >> $JOIN_CHANNEL_DRIVER_NAME
+
   echo 'if [ -f $FABRIC_CFG_PATH/$ANCHOR_PEER_NAME ]; then' >> $JOIN_CHANNEL_DRIVER_NAME
   echo '  echo " - Add AnchorPeer"' >> $JOIN_CHANNEL_DRIVER_NAME
   echo -n '  $FABRIC_PATH/build/bin/peer channel update -f $FABRIC_CFG_PATH/$ANCHOR_PEER_NAME -c blockr -o ' >> $JOIN_CHANNEL_DRIVER_NAME
