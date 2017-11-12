@@ -1,22 +1,34 @@
 
 #
+# $(find_index "vm1" "$nodes")
 # $(parse_lookup "$COUNTER" "$nodes")
 # $lead_node
 # $node_count
 # $zookeeper_count
 #
 
+find_index() {
+  l_count=0
+  for l in $2; do
+    let l_count=l_count+1
+    if [ $1 == $l ]; then
+      echo "$l_count"
+    fi
+  done
+}
+
 parse_lookup() {
   l_count=0
   for l in $2; do
     let l_count=l_count+1
-    if [ $1 = $l_count ]; then
+    if [ $1 == $l_count ]; then
       echo "$l"
     fi
   done
 }
 
 lead_node=$(echo ${nodes} | awk '{print $1}')
+
 node_count=0
 for n in $nodes; do
   let node_count=node_count+1
