@@ -21,7 +21,7 @@ parse_lookup() {
   l_count=0
   for l in $2; do
     let l_count=l_count+1
-    if [ $1 == $l_count ]; then
+    if [ $1 = $l_count ]; then
       echo "$l"
     fi
   done
