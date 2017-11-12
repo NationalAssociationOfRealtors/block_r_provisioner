@@ -2,7 +2,7 @@
 export DEBUG=false
 export FABRIC=$GOPATH/src/github.com/hyperledger/fabric
 export INSTALL_DRIVER_NAME=install_blockr_driver.sh
-export MASTER_BRANCH=false
+export MASTER_BRANCH=true
 
 echo ".----------------"
 echo "|"
