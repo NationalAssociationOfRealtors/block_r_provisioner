@@ -1,5 +1,6 @@
 #!/bin/bash
 
+CHAINCODE_ID='blockrCC -v 1.0'
 CONFIG_DIR=blockr_config
 FABRIC_PATH=/work/projects/go/src/github.com/hyperledger/fabric
 WITH_TLS=true
@@ -24,7 +25,7 @@ fi
 #echo $ORDERER_TLS
 #exit
 
-$FABRIC_PATH/build/bin/peer chaincode query -n exampleCC -v 1.0 -C blockr -c '{"Args":["query","a"]}' -o $HOSTNAME:7050 $ORDERER_TLS &> ./result.txt
+$FABRIC_PATH/build/bin/peer chaincode query -n $CHAINCODE_ID -C blockr -c '{"Args":["query","a"]}' -o $HOSTNAME:7050 $ORDERER_TLS &> ./result.txt
 while read line ; do
   if [[ $line == *"Query Result:"* ]]; then
 echo "$line"

@@ -49,6 +49,8 @@ distribute_conf() {
   if [ -f $ANCHOR_PEER_NAME ]; then
     cp $ANCHOR_PEER_NAME ./$NODE_CFG_PATH
   fi
+  CHAINCODE_NAME=./chaincode/blockr_example.go
+  cp $CHAINCODE_NAME ./$NODE_CFG_PATH
 
   CORE_PEER_MSP_PATH=''
   CORE_PEER_TLS_CERT_FILE=''

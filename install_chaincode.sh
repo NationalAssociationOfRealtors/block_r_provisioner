@@ -1,7 +1,6 @@
 #!/bin/bash
 
-CHAINCODE_ID='exampleCC -v 1.0'
-CHAINCODE_PATH='github.com/hyperledger/fabric/examples/chaincode/go/chaincode_example02'
+CHAINCODE_ID='blockrCC -v 1.0'
 CONFIG_DIR=blockr_config
 DEBUG=false
 FABRIC_PATH=$GOPATH/src/github.com/hyperledger/fabric
@@ -9,6 +8,8 @@ FABRIC_CFG_PATH=$FABRIC_PATH/$CONFIG_DIR
 INSTALL_DRIVER_NAME=install_chaincode_driver.sh
 INSTANTIATE_DRIVER_NAME=instantiate_chaincode_driver.sh
 WITH_TLS=true
+
+CHAINCODE_PATH="github.com/hyperledger/fabric/$CONFIG_DIR"
 
 distribute_chaincode_install() {
   echo "----------"

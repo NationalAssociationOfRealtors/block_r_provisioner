@@ -1,5 +1,6 @@
 #!/bin/bash
 
+CHAINCODE_ID='blockrCC -v 1.0'
 CONFIG_DIR=blockr_config
 FABRIC_PATH=/work/projects/go/src/github.com/hyperledger/fabric
 WITH_TLS=true
@@ -17,7 +18,7 @@ if [ "$WITH_TLS" = true ]; then
   ORDERER_TLS="--tls --cafile $FABRIC_CFG_PATH/ordererOrganizations/$LOCAL_DOMAIN/orderers/$HOSTNAME.$LOCAL_DOMAIN/tls/ca.crt"
 fi
 
-$FABRIC_PATH/build/bin/peer chaincode invoke -n exampleCC -v 1.0 -C blockr -c '{"Args":["invoke","a","b","10"]}' -o $HOSTNAME:7050 $ORDERER_TLS &> ./result.txt
+$FABRIC_PATH/build/bin/peer chaincode invoke -n $CHAINCODE_ID -C blockr -c '{"Args":["invoke","a","b","10"]}' -o $HOSTNAME:7050 $ORDERER_TLS &> ./result.txt
 while read line ; do
   if [[ $line == *"result: status:"* ]]; then
     echo ${line#*result:}
