@@ -38,7 +38,7 @@ install_chaincode_package() {
     echo '.pack' >> $INSTALL_DRIVER_NAME
   fi
 
-  run_driver $INSTALL_DRIVER_NAME $1
+  run_driver $INSTALL_DRIVER_NAME $1 $3
 }
 
 instantiate_chaincode() {
@@ -92,7 +92,7 @@ instantiate_chaincode() {
     echo ':7050 $ORDERER_TLS' >> $INSTANTIATE_DRIVER_NAME
   fi
 
-  run_driver $INSTANTIATE_DRIVER_NAME $1
+  run_driver $INSTANTIATE_DRIVER_NAME $1 $3
 }
 
 echo ".----------------"
@@ -113,13 +113,13 @@ echo "----------"
 COUNTER=0
 while [  $COUNTER -lt $node_count ]; do
   let COUNTER=COUNTER+1
-  install_chaincode_package $(parse_lookup "$COUNTER" "$nodes") $(parse_lookup "$COUNTER" "$domains")
+  install_chaincode_package $(parse_lookup "$COUNTER" "$nodes") $(parse_lookup "$COUNTER" "$domains") $(parse_lookup "$COUNTER" "$accounts")
 done
 
 #
 # instantiate chaincode 
 #
-instantiate_chaincode $(parse_lookup 1 "$nodes") $(parse_lookup 1 "$domains")
+instantiate_chaincode $(parse_lookup 1 "$nodes") $(parse_lookup 1 "$domains") $(parse_lookup 1 "$accounts")
 
 
 #  distribute_chaincode_install_old $(parse_lookup "$COUNTER" "$nodes") $(parse_lookup "$COUNTER" "$domains")

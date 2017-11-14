@@ -48,11 +48,10 @@ start_process() {
 }
 
 start_zookeeper() {
-
   driver_header $START_ZOOKEEPER_DRIVER_NAME 'Block R Start Zookeeper Driver'
   daemon_control $START_ZOOKEEPER_DRIVER_NAME 
   start_process $START_ZOOKEEPER_DRIVER_NAME $1 zookeeper 
-  run_driver $START_ZOOKEEPER_DRIVER_NAME $1
+  run_driver $START_ZOOKEEPER_DRIVER_NAME $1 $2
 }
 
 start_daemons() {
@@ -64,7 +63,7 @@ start_daemons() {
   daemon_control $START_DAEMON_DRIVER_NAME 
   start_process $START_DAEMON_DRIVER_NAME CouchDB couchdb
   start_process $START_DAEMON_DRIVER_NAME Kafka kafka 
-  run_driver $START_DAEMON_DRIVER_NAME $1
+  run_driver $START_DAEMON_DRIVER_NAME $1 $2
 }
 
 start_node() {
@@ -101,7 +100,7 @@ start_node() {
   echo 'fi' >> $START_NODE_DRIVER_NAME
   echo '$FABRIC_PATH/build/bin/orderer &> $LOG_FILE &' >> $START_NODE_DRIVER_NAME
 
-  run_driver $START_NODE_DRIVER_NAME $1
+  run_driver $START_NODE_DRIVER_NAME $1 $2
 }
 
 echo ".----------------"
@@ -120,7 +119,7 @@ echo "----------"
 COUNTER=0
 while [  $COUNTER -lt $zookeeper_count ]; do
   let COUNTER=COUNTER+1
-  start_zookeeper $(parse_lookup "$COUNTER" "$zookeepers")
+  start_zookeeper $(parse_lookup "$COUNTER" "$zookeepers") $(parse_lookup "$COUNTER" "$zookeeper_accounts")
 done
 
 #
@@ -129,7 +128,7 @@ done
 COUNTER=0
 while [  $COUNTER -lt $node_count ]; do
   let COUNTER=COUNTER+1
-  start_daemons $(parse_lookup "$COUNTER" "$nodes")
+  start_daemons $(parse_lookup "$COUNTER" "$nodes") $(parse_lookup "$COUNTER" "$accounts")
 done
 
 #
@@ -138,6 +137,6 @@ done
 COUNTER=0
 while [  $COUNTER -lt $node_count ]; do
   let COUNTER=COUNTER+1
-  start_node $(parse_lookup "$COUNTER" "$nodes")
+  start_node $(parse_lookup "$COUNTER" "$nodes") $(parse_lookup "$COUNTER" "$accounts")
 done
 

@@ -40,11 +40,11 @@ for n in $zookeepers; do
 done
 
 run_driver() {
-  scp -q ./$1 $2:
-  ssh $2 "chmod 777 $1"
-  ssh $2 "./$1"
+  scp -q ./$1 $3@$2:
+  ssh $3@$2 "chmod 777 $1"
+  ssh $3@$2 "./$1"
   if [ "$DEBUG" != true ]; then
-    ssh $2 "rm ./$1"
+    ssh $3@$2 "rm ./$1"
   fi
   rm ./$1
 }

@@ -32,13 +32,15 @@ This tool was created to help maintain the regional Block R processing nodes.  H
 - If you would like to work from the Hyperledger Fabric master channel, change the `MASTER_BRANCH` variable to `true`
 - Setting the `DEBUG` to `true` will leave a copy of script in the home directory to give you a chance to instapect the file.   
 3. Edit `config.sh` in the root directory with the following information: 
-- zookeepers: a space delimited list of server names that run zookeeper.  For eample, "vm1 vm2"
-- nodes: a space delimited list of server names that are regional nodes.  For eample, "west1 central1 east2"
-- domains: a space delimited list of domain names representing regional nodes.  For eample, "west.blockr central.blockr east.blockr"
-- orderer_names: a space delimited list of names representing orderers.  For eample, "WEST-Orderer-0 CENTRAL-Orderer-0 EAST-Orderer-0"
-- orderers: a space delimited list of names representing orderer MSPs.  For eample, "Orderer1MSP Orderer2MSP Orderer3MSP"
-- peer_names: a space delimited list of names representing peers.  For eample, "WEST-Peer-0 CENTRAL-Peer-0 EAST-Peer-0"
-- peers: a space delimited list of names representing peer MSPs.  For eample, "Org1MSP Org2MSP Org3MSP"
+- zookeepers: a space delimited list of server names that run zookeeper.  For example, "vm1 vm2".
+- zookeeper_accounts: a space delimited list of accounts that run zookeeper.  For example, "user1 user2a.  When used with `zookeepers` from above, can be used for ssh arguments like "user1@vm1" and user2@vm2"
+- nodes: a space delimited list of server names operating regional nodes.  For eample, "west1 central1 east2".
+- accounts: a space delimited list of accounts used to administrate regional nodes.  For example, "user_west user_central user_east".  When used with `nodes` above, can be used for ssh arguments like "user_west@west1", "user_central@central1" and "user_east@east2". 
+- domains: a space delimited list of domain names representing regional nodes.  For example, "west.blockr central.blockr east.blockr".
+- orderer_names: a space delimited list of names representing orderers.  For example, "WEST-Orderer-0 CENTRAL-Orderer-0 EAST-Orderer-0".
+- orderers: a space delimited list of names representing orderer MSPs.  For example, "Orderer1MSP Orderer2MSP Orderer3MSP".
+- peer_names: a space delimited list of names representing peers.  For example, "WEST-Peer-0 CENTRAL-Peer-0 EAST-Peer-0".
+- peers: a space delimited list of names representing peer MSPs.  For example, "Org1MSP Org2MSP Org3MSP".
 
 4. Provision the system using the instructions below. 
 

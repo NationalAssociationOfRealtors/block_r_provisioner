@@ -76,7 +76,7 @@ distribute_conf() {
 
   cat ./templates/orderer.yaml | sed "s:WITH_TLS:$WITH_TLS: ; s:ORDERER_CERT:$ORDERER_GENERAL_TLS_CERTIFICATE: ; s:ORDERER_KEY:$ORDERER_GENERAL_TLS_PRIVATEKEY: ; s:ORDERER_ROOTCERT:$ORDERER_GENERAL_TLS_ROOTCAS: ; s:ORDERER_MSP_PATH:$ORDERER_MSP_PATH: ; s:ORDERER_MSP_ID:$4:   " > $NODE_CFG_PATH/orderer.yaml
 
-  scp -rq $NODE_CFG_PATH/* $1:$TARGET_CFG_PATH
+  scp -rq $NODE_CFG_PATH/* $5@$1:$TARGET_CFG_PATH
   rm -rf $NODE_CFG_PATH
 }
 
@@ -103,7 +103,7 @@ prepare() {
   echo 'rm -rf $TARGET_CFG_PATH' >> $PREPARE_DRIVER_NAME
   echo 'mkdir $TARGET_CFG_PATH' >> $PREPARE_DRIVER_NAME
 
-  run_driver $PREPARE_DRIVER_NAME $1
+  run_driver $PREPARE_DRIVER_NAME $1 $2
 }
 
 reset() {
@@ -144,7 +144,7 @@ reset() {
   echo '  sudo rm -rf $KAFKA_DIR' >> $RESET_DRIVER_NAME
   echo 'fi' >> $RESET_DRIVER_NAME
 
-  run_driver $RESET_DRIVER_NAME $1
+  run_driver $RESET_DRIVER_NAME $1 $4
 }
 
 echo ".----------------"
@@ -162,7 +162,7 @@ echo "'----------------"
 COUNTER=0
 while [  $COUNTER -lt $node_count ]; do
   let COUNTER=COUNTER+1 
-  prepare $(parse_lookup "$COUNTER" "$nodes")
+  prepare $(parse_lookup "$COUNTER" "$nodes") $(parse_lookup "$COUNTER" "$accounts")
 done
 
 #
@@ -190,7 +190,7 @@ zookeeper_connect=${zookeeper_connect:0:-1}
 COUNTER=0
 while [  $COUNTER -lt $node_count ]; do
   let COUNTER=COUNTER+1 
-  reset $(parse_lookup "$COUNTER" "$nodes") $COUNTER $zookeeper_connect 
+  reset $(parse_lookup "$COUNTER" "$nodes") $COUNTER $zookeeper_connect $(parse_lookup "$COUNTER" "$accounts") 
   rm -rf $TEMP_CFG_PATH/server.properties
 done
 rm -rf $TEMP_CFG_PATH
@@ -413,7 +413,7 @@ echo "----------"
 COUNTER=0
 while [  $COUNTER -lt $node_count ]; do
   let COUNTER=COUNTER+1 
-  distribute_conf $(parse_lookup "$COUNTER" "$nodes") $(parse_lookup "$COUNTER" "$peers") $(parse_lookup "$COUNTER" "$domains") $(parse_lookup "$COUNTER" "$orderers")
+  distribute_conf $(parse_lookup "$COUNTER" "$nodes") $(parse_lookup "$COUNTER" "$peers") $(parse_lookup "$COUNTER" "$domains") $(parse_lookup "$COUNTER" "$orderers") $(parse_lookup "$COUNTER" "$accounts")
 done
 
 rm -rf $LOCAL_CFG_PATH 

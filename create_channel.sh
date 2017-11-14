@@ -67,7 +67,7 @@ create_channel() {
   echo 'fi' >> $CREATE_CHANNEL_DRIVER_NAME
   echo 'mv blockr.block $FABRIC_CFG_PATH' >> $CREATE_CHANNEL_DRIVER_NAME
 
-  run_driver $CREATE_CHANNEL_DRIVER_NAME $1
+  run_driver $CREATE_CHANNEL_DRIVER_NAME $1 $4
 }
 
 join_channel() {
@@ -156,7 +156,7 @@ join_channel() {
   fi
   echo 'fi' >> $JOIN_CHANNEL_DRIVER_NAME
 
-  run_driver $JOIN_CHANNEL_DRIVER_NAME $1
+  run_driver $JOIN_CHANNEL_DRIVER_NAME $1 $4
 }
 
 echo ".----------------"
@@ -171,7 +171,7 @@ echo "'----------------"
 #
 # create the channel 
 #
-create_channel $(parse_lookup 1 "$nodes") $(parse_lookup 1 "$peers") $(parse_lookup 1 "$domains")
+create_channel $(parse_lookup 1 "$nodes") $(parse_lookup 1 "$peers") $(parse_lookup 1 "$domains") $(parse_lookup 1 "$accounts")
 
 #
 # join the channel 
@@ -179,7 +179,7 @@ create_channel $(parse_lookup 1 "$nodes") $(parse_lookup 1 "$peers") $(parse_loo
 COUNTER=0
 while [  $COUNTER -lt $node_count ]; do
   let COUNTER=COUNTER+1
-  join_channel $(parse_lookup "$COUNTER" "$nodes") $(parse_lookup "$COUNTER" "$peers") $(parse_lookup "$COUNTER" "$domains")
+  join_channel $(parse_lookup "$COUNTER" "$nodes") $(parse_lookup "$COUNTER" "$peers") $(parse_lookup "$COUNTER" "$domains") $(parse_lookup "$COUNTER" "$accounts")
 done
 
 

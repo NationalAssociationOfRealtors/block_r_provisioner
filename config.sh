@@ -1,5 +1,7 @@
 zookeepers="vm1 vm2"
+zookeeper_accounts="mal mal"
 nodes="vm1 vm2"
+accounts="mal mal"
 domains="nar.blockr car.blockr"
 orderer_names="NAR-Orderer-0 CAR-Orderer-0"
 orderers="Orderer1MSP Orderer2MSP"

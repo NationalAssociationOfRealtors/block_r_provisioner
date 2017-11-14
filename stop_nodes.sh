@@ -33,7 +33,7 @@ shutdown_node() {
   echo 'sudo pkill peer' >> $STOP_NODE_DRIVER_NAME
   echo 'echo "- Stopped"' >> $STOP_NODE_DRIVER_NAME
 
-  run_driver $STOP_NODE_DRIVER_NAME $1
+  run_driver $STOP_NODE_DRIVER_NAME $1 $2
 }
 
 shutdown_daemons() {
@@ -46,7 +46,7 @@ shutdown_daemons() {
   stop_process $STOP_DAEMON_DRIVER_NAME CouchDB couchdb 
   stop_process $STOP_DAEMON_DRIVER_NAME Kafka kafka 
 
-  run_driver $STOP_DAEMON_DRIVER_NAME $1
+  run_driver $STOP_DAEMON_DRIVER_NAME $1 $2
 }
  
 shutdown_zookeeper() {
@@ -55,7 +55,7 @@ shutdown_zookeeper() {
 
   stop_process $STOP_ZOOKEEPER_DRIVER_NAME $1 zookeeper 
 
-  run_driver $STOP_ZOOKEEPER_DRIVER_NAME $1
+  run_driver $STOP_ZOOKEEPER_DRIVER_NAME $1 $2
 }
  
 echo ".----------------"
@@ -73,7 +73,7 @@ echo "'----------------"
 COUNTER=0
 while [  $COUNTER -lt $node_count ]; do
   let COUNTER=COUNTER+1
-  shutdown_node $(parse_lookup "$COUNTER" "$nodes")
+  shutdown_node $(parse_lookup "$COUNTER" "$nodes") $(parse_lookup "$COUNTER" "$accounts")
 done
 
 #
@@ -82,7 +82,7 @@ done
 COUNTER=0
 while [  $COUNTER -lt $node_count ]; do
   let COUNTER=COUNTER+1
-  shutdown_daemons $(parse_lookup "$COUNTER" "$nodes")
+  shutdown_daemons $(parse_lookup "$COUNTER" "$nodes") $(parse_lookup "$COUNTER" "$accounts")
 done
 
 echo "----------"
@@ -91,5 +91,5 @@ echo "----------"
 COUNTER=0
 while [  $COUNTER -lt $zookeeper_count ]; do
   let COUNTER=COUNTER+1
-  shutdown_zookeeper $(parse_lookup "$COUNTER" "$zookeepers")
+  shutdown_zookeeper $(parse_lookup "$COUNTER" "$zookeepers") $(parse_lookup "$COUNTER" "$zookeeper_accounts")
 done
