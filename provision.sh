@@ -1,10 +1,13 @@
 #!/bin/bash
 
+CHAINCODE_ID='blockrCC'
+CHAINCODE_VERSION='1.0'
 CONFIG_DIR=blockr_config
 DEBUG=false
 FABRIC_PATH=$GOPATH/src/github.com/hyperledger/fabric
 KAFKA_DIR=/var/kafka-logs
 HYPERLEDGER_DIR=/var/hyperledger
+LOCAL_CFG_PATH=./$CONFIG_DIR
 PREPARE_DRIVER_NAME=prepare_node_driver.sh
 RESET_DRIVER_NAME=reset_node_driver.sh
 TARGET_CFG_PATH=$FABRIC_PATH/$CONFIG_DIR
@@ -13,10 +16,8 @@ WITH_ANCHOR_PEERS=true
 WITH_TLS=true
 ZOOKEEPER_DIR=/var/zookeeper
 
-export FABRIC_CFG_PATH=./$CONFIG_DIR
-
 createAnchor() {
-  ANCHOR_PEER_NAME=$FABRIC_CFG_PATH/$1-anchor.tx
+  ANCHOR_PEER_NAME=$LOCAL_CFG_PATH/$1-anchor.tx
   if [ "$DEBUG" != true ]; then
     $FABRIC_PATH/build/bin/configtxgen -profile Channels -outputAnchorPeersUpdate $ANCHOR_PEER_NAME -channelID blockr -asOrg $1 &> /dev/null
   else 
@@ -28,9 +29,8 @@ createAnchor() {
 }
 
 distribute_conf() {
-  echo "----------"
-  echo " Distribute configuration to Node $1"
-  echo "----------"
+
+  echo " - $1"
 
   NODE_CFG_PATH=./$CONFIG_DIR.$1.$3
   if [ -d $NODE_CFG_PATH ]; then
@@ -38,19 +38,21 @@ distribute_conf() {
   fi
   mkdir -p $NODE_CFG_PATH
   mkdir -p $NODE_CFG_PATH/peerOrganizations/$3
-  cp -r $FABRIC_CFG_PATH/peerOrganizations/$3 ./$NODE_CFG_PATH/peerOrganizations
+  cp -r $LOCAL_CFG_PATH/peerOrganizations/$3 ./$NODE_CFG_PATH/peerOrganizations
   mkdir -p $NODE_CFG_PATH/ordererOrganizations/$3
-  cp -r $FABRIC_CFG_PATH/ordererOrganizations/$3 ./$NODE_CFG_PATH/ordererOrganizations
-  cp $FABRIC_CFG_PATH/genesis.block ./$NODE_CFG_PATH
+  cp -r $LOCAL_CFG_PATH/ordererOrganizations/$3 ./$NODE_CFG_PATH/ordererOrganizations
+  cp $LOCAL_CFG_PATH/genesis.block ./$NODE_CFG_PATH
   if [ $1 == $lead_node ]; then
-    cp $FABRIC_CFG_PATH/blockr.tx ./$NODE_CFG_PATH
+    cp $LOCAL_CFG_PATH/blockr.tx ./$NODE_CFG_PATH
   fi
-  ANCHOR_PEER_NAME=$FABRIC_CFG_PATH/$5-anchor.tx
+  ANCHOR_PEER_NAME=$LOCAL_CFG_PATH/$5-anchor.tx
   if [ -f $ANCHOR_PEER_NAME ]; then
     cp $ANCHOR_PEER_NAME ./$NODE_CFG_PATH
   fi
-  CHAINCODE_NAME=./chaincode/blockr_example.go
-  cp $CHAINCODE_NAME ./$NODE_CFG_PATH
+
+#  CHAINCODE_NAME=./chaincode/blockr_example.go
+#  CHAINCODE_NAME=./chaincode/chaincode_example02.go
+#  cp $CHAINCODE_NAME ./$NODE_CFG_PATH
 
   CORE_PEER_MSP_PATH=''
   CORE_PEER_TLS_CERT_FILE=''
@@ -194,22 +196,22 @@ done
 rm -rf $TEMP_CFG_PATH
 
 echo "----------"
-echo " Reset local configuration directory $FABRIC_CFG_PATH"
+echo " Reset local configuration directory $LOCAL_CFG_PATH"
 echo "----------"
-rm -rf $FABRIC_CFG_PATH 
-mkdir -p $FABRIC_CFG_PATH 
+rm -rf $LOCAL_CFG_PATH 
+mkdir -p $LOCAL_CFG_PATH 
 
 echo "----------"
 echo " Generate keys from blockr-config.yaml"
 echo "----------"
 
-#cp ./templates/blockr-config.yaml $FABRIC_CFG_PATH
-#$FABRIC_PATH/build/bin/cryptogen generate --config $FABRIC_CFG_PATH/blockr-config.yaml --output $FABRIC_CFG_PATH &> generate_keys.txt
+#cp ./templates/blockr-config.yaml $LOCAL_CFG_PATH
+#$FABRIC_PATH/build/bin/cryptogen generate --config $LOCAL_CFG_PATH/blockr-config.yaml --output $LOCAL_CFG_PATH &> generate_keys.txt
 
 #
 # create blockr definitions 
 #
-blockr_config=$FABRIC_CFG_PATH/blockr-config.yaml
+blockr_config=$LOCAL_CFG_PATH/blockr-config.yaml
 echo "################################################################################" >> $blockr_config 
 echo "#" >> $blockr_config 
 echo "#  Block R Network Configuration generated from config.sh" >> $blockr_config 
@@ -241,7 +243,7 @@ while [  $COUNTER -lt $node_count ]; do
   echo -n "      - Hostname: " >> $blockr_config 
   echo $(parse_lookup "$COUNTER" "$nodes") >> $blockr_config 
 done
-$FABRIC_PATH/build/bin/cryptogen generate --config $blockr_config --output $FABRIC_CFG_PATH &> generate_keys.txt
+$FABRIC_PATH/build/bin/cryptogen generate --config $blockr_config --output $LOCAL_CFG_PATH &> generate_keys.txt
 cat generate_keys.txt
 rm generate_keys.txt
 
@@ -249,8 +251,8 @@ echo "----------"
 echo " Generate artifacts from configtx.yaml"
 echo "----------"
 
-#cp ./templates/configtx.yaml $FABRIC_CFG_PATH
-blockr_config=$FABRIC_CFG_PATH/configtx.yaml
+#cp ./templates/configtx.yaml $LOCAL_CFG_PATH
+blockr_config=$LOCAL_CFG_PATH/configtx.yaml
 echo "---" >> $blockr_config 
 echo "################################################################################" >> $blockr_config 
 echo "#" >> $blockr_config 
@@ -366,24 +368,26 @@ echo '    "V1.1": true' >> $blockr_config
 echo "  Application: &ApplicationCapabilities" >> $blockr_config
 echo '    "V1.1": true' >> $blockr_config
 
+export FABRIC_CFG_PATH=./$CONFIG_DIR
+
 echo " - Genesis block using profile:Genesis"
 if [ "$DEBUG" != true ]; then
-  $FABRIC_PATH/build/bin/configtxgen -profile Genesis -outputBlock $FABRIC_CFG_PATH/genesis.block -channelID system &> /dev/null
+  $FABRIC_PATH/build/bin/configtxgen -profile Genesis -outputBlock $LOCAL_CFG_PATH/genesis.block -channelID system &> /dev/null
 else
-  $FABRIC_PATH/build/bin/configtxgen -profile Genesis -outputBlock $FABRIC_CFG_PATH/genesis.block -channelID system
+  $FABRIC_PATH/build/bin/configtxgen -profile Genesis -outputBlock $LOCAL_CFG_PATH/genesis.block -channelID system
 fi
-if ! [ -f $FABRIC_CFG_PATH/genesis.block ]; then
+if ! [ -f $LOCAL_CFG_PATH/genesis.block ]; then
   echo 'ERROR'
   exit 1
 fi
 
 echo " - Channel block using profile:Channels"
 if [ "$DEBUG" != true ]; then
-  $FABRIC_PATH/build/bin/configtxgen -profile Channels -outputCreateChannelTx $FABRIC_CFG_PATH/blockr.tx -channelID blockr &> /dev/null
+  $FABRIC_PATH/build/bin/configtxgen -profile Channels -outputCreateChannelTx $LOCAL_CFG_PATH/blockr.tx -channelID blockr &> /dev/null
 else
-  $FABRIC_PATH/build/bin/configtxgen -profile Channels -outputCreateChannelTx $FABRIC_CFG_PATH/blockr.tx -channelID blockr
+  $FABRIC_PATH/build/bin/configtxgen -profile Channels -outputCreateChannelTx $LOCAL_CFG_PATH/blockr.tx -channelID blockr
 fi
-if ! [ -f $FABRIC_CFG_PATH/blockr.tx ]; then
+if ! [ -f $LOCAL_CFG_PATH/blockr.tx ]; then
   echo 'ERROR'
   exit 1
 fi
@@ -401,13 +405,39 @@ if [ "$WITH_ANCHOR_PEERS" = true ]; then
 fi
 
 #
-# Peer and orderer configurartion distribution
+# Peer and orderer configuration distribution
 #
+echo "----------"
+echo " Distribute configuration"
+echo "----------"
 COUNTER=0
 while [  $COUNTER -lt $node_count ]; do
   let COUNTER=COUNTER+1 
   distribute_conf $(parse_lookup "$COUNTER" "$nodes") $(parse_lookup "$COUNTER" "$peers") $(parse_lookup "$COUNTER" "$domains") $(parse_lookup "$COUNTER" "$orderers")
 done
 
-rm -rf $FABRIC_CFG_PATH 
+rm -rf $LOCAL_CFG_PATH 
+
+echo "----------"
+echo " Generate chaincode package"
+echo "----------"
+export FABRIC_CFG_PATH=$FABRIC_PATH/$CONFIG_DIR
+CHAINCODE_NAME=./chaincode/blockr_example.go
+CHAINCODE_PATH=$FABRIC_PATH/test_config
+mkdir -p $CHAINCODE_PATH
+cp $CHAINCODE_NAME $CHAINCODE_PATH
+CHAINCODE_LOCATION=github.com/hyperledger/fabric/test_config
+$FABRIC_PATH/build/bin/peer chaincode package -n $CHAINCODE_ID -v $CHAINCODE_VERSION -p $CHAINCODE_LOCATION -s -S $CHAINCODE_PATH/$CHAINCODE_ID.pack &> /dev/null
+
+echo "----------"
+echo " Distribute chaincode package"
+echo "----------"
+COUNTER=0
+while [  $COUNTER -lt $node_count ]; do
+  let COUNTER=COUNTER+1 
+  target=$(parse_lookup "$COUNTER" "$nodes")
+  echo " - $target"
+  scp -rq $CHAINCODE_PATH/$CHAINCODE_ID.pack $target:$TARGET_CFG_PATH
+done
+rm -rf $CHAINCODE_PATH 
 

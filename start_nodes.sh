@@ -57,7 +57,7 @@ start_zookeeper() {
 
 start_daemons() {
   echo "----------"
-  echo " Starting Daemons on Node $1"
+  echo " Start daemons on Node $1"
   echo "----------"
 
   driver_header $START_DAEMON_DRIVER_NAME 'Block R Start Daemon Driver'
@@ -69,7 +69,7 @@ start_daemons() {
 
 start_node() {
   echo "----------"
-  echo " Start Node $1"
+  echo " Start Hyperleder on Node $1"
   echo "----------"
 
   driver_header $START_NODE_DRIVER_NAME 'Block R Start Node Driver'
@@ -115,7 +115,7 @@ echo "'----------------"
 . ./scripts/common.sh
 
 echo "----------"
-echo " Starting Zookeeper"
+echo " Start Zookeeper"
 echo "----------"
 COUNTER=0
 while [  $COUNTER -lt $zookeeper_count ]; do

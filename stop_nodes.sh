@@ -21,7 +21,7 @@ stop_process() {
 
 shutdown_node() {
   echo "----------"
-  echo " Shutdown Node $1"
+  echo " Shutdown Hyperledger on Node $1"
   echo "----------"
 
   driver_header $STOP_NODE_DRIVER_NAME 'Block R Stop Node Driver'
@@ -38,7 +38,7 @@ shutdown_node() {
 
 shutdown_daemons() {
   echo "----------"
-  echo " Stopping daemons on $1"
+  echo " Stop daemons on $1"
   echo "----------"
 
   driver_header $STOP_DAEMON_DRIVER_NAME 'Block R Stop Daemon Driver'
@@ -86,7 +86,7 @@ while [  $COUNTER -lt $node_count ]; do
 done
 
 echo "----------"
-echo " Stopping Zookeeper"
+echo " Stop Zookeeper"
 echo "----------"
 COUNTER=0
 while [  $COUNTER -lt $zookeeper_count ]; do

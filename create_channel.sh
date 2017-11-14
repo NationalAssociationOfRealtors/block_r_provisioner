@@ -72,7 +72,7 @@ create_channel() {
 
 join_channel() {
   echo "----------"
-  echo " Join channel from Node $1"
+  echo " Join Node $1 to channel"
   echo "----------"
 
   ORDERER_TLS=''
