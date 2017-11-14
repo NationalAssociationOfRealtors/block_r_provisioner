@@ -10,13 +10,14 @@ HYPERLEDGER_DIR=/var/hyperledger
 LOCAL_CFG_PATH=./$CONFIG_DIR
 PREPARE_DRIVER_NAME=prepare_node_driver.sh
 RESET_DRIVER_NAME=reset_node_driver.sh
+RESET_ZOOKEEPER_DRIVER_NAME=reset_zookeeper_driver.sh
 TARGET_CFG_PATH=$FABRIC_PATH/$CONFIG_DIR
 TEMP_CFG_PATH=./$CONFIG_DIR.temp
 WITH_ANCHOR_PEERS=true
 WITH_TLS=true
 ZOOKEEPER_DIR=/var/zookeeper
 
-createAnchor() {
+create_anchor() {
   ANCHOR_PEER_NAME=$LOCAL_CFG_PATH/$1-anchor.tx
   if [ "$DEBUG" != true ]; then
     $FABRIC_PATH/build/bin/configtxgen -profile Channels -outputAnchorPeersUpdate $ANCHOR_PEER_NAME -channelID blockr -asOrg $1 &> /dev/null
@@ -76,7 +77,7 @@ distribute_conf() {
 
   cat ./templates/orderer.yaml | sed "s:WITH_TLS:$WITH_TLS: ; s:ORDERER_CERT:$ORDERER_GENERAL_TLS_CERTIFICATE: ; s:ORDERER_KEY:$ORDERER_GENERAL_TLS_PRIVATEKEY: ; s:ORDERER_ROOTCERT:$ORDERER_GENERAL_TLS_ROOTCAS: ; s:ORDERER_MSP_PATH:$ORDERER_MSP_PATH: ; s:ORDERER_MSP_ID:$4:   " > $NODE_CFG_PATH/orderer.yaml
 
-  scp -rq $NODE_CFG_PATH/* $5@$1:$TARGET_CFG_PATH
+  scp -rq $NODE_CFG_PATH/* $6@$1:$TARGET_CFG_PATH
   rm -rf $NODE_CFG_PATH
 }
 
@@ -106,45 +107,57 @@ prepare() {
   run_driver $PREPARE_DRIVER_NAME $1 $2
 }
 
-reset() {
+reset_zookeeper() {
+
+  echo " - $1"
+
+  scp -q $TEMP_CFG_PATH/zookeeper.properties $3@$1:/opt/kafka_2.11-0.10.2.0/config 
+
+  driver_header $RESET_ZOOKEEPER_DRIVER_NAME 'Block R Reset Zookeepxeer Driver'
+
+  echo -n 'ZOOKEEPER_DIR=' >> $RESET_ZOOKEEPER_DRIVER_NAME 
+  echo $ZOOKEEPER_DIR >> $RESET_ZOOKEEPER_DRIVER_NAME 
+  echo 'if [ -d $ZOOKEEPER_DIR ]; then' >> $RESET_ZOOKEEPER_DRIVER_NAME
+  echo '  sudo rm -rf $ZOOKEEPER_DIR' >> $RESET_ZOOKEEPER_DRIVER_NAME
+  echo 'fi' >> $RESET_ZOOKEEPER_DRIVER_NAME
+  echo 'sudo mkdir $ZOOKEEPER_DIR' >> $RESET_ZOOKEEPER_DRIVER_NAME
+  echo -n 'sudo echo "' >> $RESET_ZOOKEEPER_DRIVER_NAME
+  echo -n $2 >> $RESET_ZOOKEEPER_DRIVER_NAME
+  echo '"> ~/myid' >> $RESET_ZOOKEEPER_DRIVER_NAME
+  echo 'sudo mv ~/myid $ZOOKEEPER_DIR' >> $RESET_ZOOKEEPER_DRIVER_NAME
+
+  run_driver $RESET_ZOOKEEPER_DRIVER_NAME $1 $3
+}
+
+reset_node() {
   echo "----------"
-  echo " Resetting Node $1"
+  echo " Reset Node $1"
   echo "----------"
 
   cp ./templates/server.properties $TEMP_CFG_PATH/server.properties.template
   cat $TEMP_CFG_PATH/server.properties.template | sed "s|BROKER_ID|$2| ; s|SERVER_ADDRESS|$1| ; s|ZOOKEEPER_CONNECT|$3| " > $TEMP_CFG_PATH/server.properties
-  scp -q $TEMP_CFG_PATH/server.properties $1:/opt/kafka_2.11-0.10.2.0/config 
-  scp -q $TEMP_CFG_PATH/zookeeper.properties $1:/opt/kafka_2.11-0.10.2.0/config 
+  scp -q $TEMP_CFG_PATH/server.properties $4@$1:/opt/kafka_2.11-0.10.2.0/config 
 
   driver_header $RESET_DRIVER_NAME 'Block R Reset Driver'
 
-  echo -n 'export HYPERLEDGER_DIR=' >> $RESET_DRIVER_NAME 
+  echo -n 'HYPERLEDGER_DIR=' >> $RESET_DRIVER_NAME 
   echo $HYPERLEDGER_DIR >> $RESET_DRIVER_NAME 
-  echo -n 'export KAFKA_DIR=' >> $RESET_DRIVER_NAME 
+  echo -n 'KAFKA_DIR=' >> $RESET_DRIVER_NAME 
   echo $KAFKA_DIR >> $RESET_DRIVER_NAME 
-  echo -n 'export ZOOKEEPER_DIR=' >> $RESET_DRIVER_NAME 
-  echo $ZOOKEEPER_DIR >> $RESET_DRIVER_NAME 
   echo 'echo " - Hyperledger repository"' >> $RESET_DRIVER_NAME
   echo 'if [ -d $HYPERLEDGER_DIR ]; then' >> $RESET_DRIVER_NAME
   echo '  sudo rm -rf $HYPERLEDGER_DIR' >> $RESET_DRIVER_NAME
   echo 'fi' >> $RESET_DRIVER_NAME
   echo 'sudo mkdir $HYPERLEDGER_DIR' >> $RESET_DRIVER_NAME
   echo 'sudo chown $(whoami):$(whoami) $HYPERLEDGER_DIR' >> $RESET_DRIVER_NAME
-  echo 'echo " - Zookeeper repository"' >> $RESET_DRIVER_NAME
-  echo 'if [ -d $ZOOKEEPER_DIR ]; then' >> $RESET_DRIVER_NAME
-  echo '  sudo rm -rf $ZOOKEEPER_DIR' >> $RESET_DRIVER_NAME
-  echo 'fi' >> $RESET_DRIVER_NAME
-  echo 'sudo mkdir $ZOOKEEPER_DIR' >> $RESET_DRIVER_NAME
-  echo -n 'sudo echo "' >> $RESET_DRIVER_NAME
-  echo -n $2 >> $RESET_DRIVER_NAME
-  echo '"> ~/myid' >> $RESET_DRIVER_NAME
-  echo 'sudo mv ~/myid $ZOOKEEPER_DIR' >> $RESET_DRIVER_NAME
   echo 'echo " - Kafka repository"' >> $RESET_DRIVER_NAME
   echo 'if [ -d $KAFKA_DIR ]; then' >> $RESET_DRIVER_NAME
   echo '  sudo rm -rf $KAFKA_DIR' >> $RESET_DRIVER_NAME
   echo 'fi' >> $RESET_DRIVER_NAME
 
   run_driver $RESET_DRIVER_NAME $1 $4
+
+  rm -rf $TEMP_CFG_PATH/server.properties
 }
 
 echo ".----------------"
@@ -185,13 +198,24 @@ done
 zookeeper_connect=${zookeeper_connect:0:-1}
 
 #
-# setup kafkas for each node and to look for all zookeepers 
+# setup kafkas for each node and including all zookeepers 
 #
 COUNTER=0
 while [  $COUNTER -lt $node_count ]; do
   let COUNTER=COUNTER+1 
-  reset $(parse_lookup "$COUNTER" "$nodes") $COUNTER $zookeeper_connect $(parse_lookup "$COUNTER" "$accounts") 
-  rm -rf $TEMP_CFG_PATH/server.properties
+  reset_node $(parse_lookup "$COUNTER" "$nodes") $COUNTER $zookeeper_connect $(parse_lookup "$COUNTER" "$accounts")
+done
+
+#
+# setup zookeepers 
+#
+echo "----------"
+echo " Reset Zookeeper"
+echo "----------"
+COUNTER=0
+while [  $COUNTER -lt $zookeeper_count ]; do
+  let COUNTER=COUNTER+1 
+  reset_zookeeper $(parse_lookup "$COUNTER" "$zookeepers") $COUNTER $(parse_lookup "$COUNTER" "$zookeeper_accounts")
 done
 rm -rf $TEMP_CFG_PATH
 
@@ -400,7 +424,7 @@ if [ "$WITH_ANCHOR_PEERS" = true ]; then
   COUNTER=0
   while [  $COUNTER -lt $node_count ]; do
     let COUNTER=COUNTER+1 
-    createAnchor $(parse_lookup "$COUNTER" "$peer_names")
+    create_anchor $(parse_lookup "$COUNTER" "$peer_names")
   done
 fi
 
@@ -413,7 +437,7 @@ echo "----------"
 COUNTER=0
 while [  $COUNTER -lt $node_count ]; do
   let COUNTER=COUNTER+1 
-  distribute_conf $(parse_lookup "$COUNTER" "$nodes") $(parse_lookup "$COUNTER" "$peers") $(parse_lookup "$COUNTER" "$domains") $(parse_lookup "$COUNTER" "$orderers") $(parse_lookup "$COUNTER" "$accounts")
+  distribute_conf $(parse_lookup "$COUNTER" "$nodes") $(parse_lookup "$COUNTER" "$peers") $(parse_lookup "$COUNTER" "$domains") $(parse_lookup "$COUNTER" "$orderers") $(parse_lookup "$COUNTER" "$peer_names") $(parse_lookup "$COUNTER" "$accounts")
 done
 
 rm -rf $LOCAL_CFG_PATH 
@@ -436,8 +460,9 @@ COUNTER=0
 while [  $COUNTER -lt $node_count ]; do
   let COUNTER=COUNTER+1 
   target=$(parse_lookup "$COUNTER" "$nodes")
+  target_account=$(parse_lookup "$COUNTER" "$accountss")
   echo " - $target"
-  scp -rq $CHAINCODE_PATH/$CHAINCODE_ID.pack $target:$TARGET_CFG_PATH
+  scp -rq $CHAINCODE_PATH/$CHAINCODE_ID.pack $target_account@$target:$TARGET_CFG_PATH
 done
 rm -rf $CHAINCODE_PATH 
 
