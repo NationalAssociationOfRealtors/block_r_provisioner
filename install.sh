@@ -39,7 +39,7 @@ echo $FABRIC >> $INSTALL_DRIVER_NAME
 echo -n 'cd ' >> $INSTALL_DRIVER_NAME
 echo $FABRIC >> $INSTALL_DRIVER_NAME
 if [ "$MASTER_BRANCH" == true ]; then
-  echo 'Change to the master branch' >> $INSTALL_DRIVER_NAME 
+  echo "echo 'Change to the master branch'" >> $INSTALL_DRIVER_NAME 
   echo 'git checkout master' >> $INSTALL_DRIVER_NAME 
 fi
 echo -n 'export GOPATH=' >> $INSTALL_DRIVER_NAME
