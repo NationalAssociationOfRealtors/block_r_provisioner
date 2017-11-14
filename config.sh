@@ -7,7 +7,7 @@
 #
 # Zookeeper configurationam - There should be two servers configured.
 #
-zookeepers="vm1 vm2"
+zookeepers="zm1 zm2"
 zookeeper_accounts="mal mal"
 
 #
