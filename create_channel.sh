@@ -1,7 +1,7 @@
 #!/bin/bash
 
 CONFIG_DIR=blockr_config
-DEBUG=true
+DEBUG=false
 DELAY_TIME=60
 FABRIC_PATH=$GOPATH/src/github.com/hyperledger/fabric
 FABRIC_CFG_PATH=$FABRIC_PATH/$CONFIG_DIR
