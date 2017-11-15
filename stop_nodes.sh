@@ -1,8 +1,8 @@
 #!/bin/bash
 
-DEBUG=false
-STOP_DAEMON_DRIVER_NAME=stop_daemon_driver.sh
-STOP_NODE_DRIVER_NAME=stop_node_driver.sh
+DEBUG=true
+STOP_ORDERER_DRIVER_NAME=stop_orderer_driver.sh
+STOP_PEER_DRIVER_NAME=stop_peer_driver.sh
 STOP_ZOOKEEPER_DRIVER_NAME=stop_zookeeper_driver.sh
 
 stop_process() {
@@ -19,34 +19,26 @@ stop_process() {
   echo 'fi' >> $1
 }
 
-shutdown_node() {
-  echo "----------"
-  echo " Shutdown Hyperledger on Node $1"
-  echo "----------"
+shutdown_orderer() {
+  driver_header $STOP_ORDERER_DRIVER_NAME 'Block R Stop Orderer Driver'
 
-  driver_header $STOP_NODE_DRIVER_NAME 'Block R Stop Node Driver'
+  echo 'echo -n " - Orderer "' >> $STOP_ORDERER_DRIVER_NAME
+  echo 'sudo pkill /bin/orderer' >> $STOP_ORDERER_DRIVER_NAME
+  echo 'echo " - Stopped"' >> $STOP_ORDERER_DRIVER_NAME
+  stop_process $STOP_ORDERER_DRIVER_NAME Kafka kafka 
 
-  echo 'echo -n " - Orderer "' >> $STOP_NODE_DRIVER_NAME
-  echo 'sudo pkill orderer' >> $STOP_NODE_DRIVER_NAME
-  echo 'echo "- Stopped"' >> $STOP_NODE_DRIVER_NAME
-  echo 'echo -n " - Peer "' >> $STOP_NODE_DRIVER_NAME
-  echo 'sudo pkill peer' >> $STOP_NODE_DRIVER_NAME
-  echo 'echo "- Stopped"' >> $STOP_NODE_DRIVER_NAME
-
-  run_driver $STOP_NODE_DRIVER_NAME $1 $2
+  run_driver $STOP_ORDERER_DRIVER_NAME $1 $2
 }
 
-shutdown_daemons() {
-  echo "----------"
-  echo " Stop daemons on $1"
-  echo "----------"
+shutdown_peer() {
+  driver_header $STOP_PEER_DRIVER_NAME 'Block R Stop Peer Driver'
 
-  driver_header $STOP_DAEMON_DRIVER_NAME 'Block R Stop Daemon Driver'
+  echo 'echo -n " - Peer "' >> $STOP_PEER_DRIVER_NAME
+  echo 'sudo pkill /bin/peer' >> $STOP_PEER_DRIVER_NAME
+  echo 'echo "- Stopped"' >> $STOP_PEER_DRIVER_NAME
+  stop_process $STOP_PEER_DRIVER_NAME CouchDB couchdb 
 
-  stop_process $STOP_DAEMON_DRIVER_NAME CouchDB couchdb 
-  stop_process $STOP_DAEMON_DRIVER_NAME Kafka kafka 
-
-  run_driver $STOP_DAEMON_DRIVER_NAME $1 $2
+  run_driver $STOP_PEER_DRIVER_NAME $1 $2
 }
  
 shutdown_zookeeper() {
@@ -68,21 +60,18 @@ echo "'----------------"
 . ./scripts/common.sh
 
 #
-# shutdown nodes 
-#
-COUNTER=0
-while [  $COUNTER -lt $node_count ]; do
-  let COUNTER=COUNTER+1
-  shutdown_node $(parse_lookup "$COUNTER" "$nodes") $(parse_lookup "$COUNTER" "$accounts")
-done
-
-#
 # shutdown daemons
 #
 COUNTER=0
 while [  $COUNTER -lt $node_count ]; do
   let COUNTER=COUNTER+1
-  shutdown_daemons $(parse_lookup "$COUNTER" "$nodes") $(parse_lookup "$COUNTER" "$accounts")
+  node_name=$(parse_lookup "$COUNTER" "$nodes")
+  account_name=$(parse_lookup "$COUNTER" "$accounts")
+  echo "----------"
+  echo " Stop Node $node_name"
+  echo "----------"
+  shutdown_orderer $node_name $account_name
+  shutdown_peer $node_name $account_name
 done
 
 echo "----------"

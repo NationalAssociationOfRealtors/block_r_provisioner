@@ -5,8 +5,8 @@ DEBUG=false
 FABRIC_PATH=$GOPATH/src/github.com/hyperledger/fabric
 FABRIC_CFG_PATH=$FABRIC_PATH/$CONFIG_DIR
 MAX_RETRIES=7
-START_DAEMON_DRIVER_NAME=start_daemon_driver.sh
-START_NODE_DRIVER_NAME=start_node_driver.sh
+START_ORDERER_DRIVER_NAME=start_orderer_driver.sh
+START_PEER_DRIVER_NAME=start_peer_driver.sh
 START_ZOOKEEPER_DRIVER_NAME=start_zookeeper_driver.sh
 WAIT_SECONDS=3
 
@@ -50,57 +50,60 @@ start_process() {
 start_zookeeper() {
   driver_header $START_ZOOKEEPER_DRIVER_NAME 'Block R Start Zookeeper Driver'
   daemon_control $START_ZOOKEEPER_DRIVER_NAME 
+
   start_process $START_ZOOKEEPER_DRIVER_NAME $1 zookeeper 
+
   run_driver $START_ZOOKEEPER_DRIVER_NAME $1 $2
 }
 
-start_daemons() {
-  echo "----------"
-  echo " Start daemons on Node $1"
-  echo "----------"
+start_orderer() {
+  driver_header $START_ORDERER_DRIVER_NAME 'Block R Start Orderer Driver'
+  daemon_control $START_ORDERER_DRIVER_NAME 
 
-  driver_header $START_DAEMON_DRIVER_NAME 'Block R Start Daemon Driver'
-  daemon_control $START_DAEMON_DRIVER_NAME 
-  start_process $START_DAEMON_DRIVER_NAME CouchDB couchdb
-  start_process $START_DAEMON_DRIVER_NAME Kafka kafka 
-  run_driver $START_DAEMON_DRIVER_NAME $1 $2
+  echo -n 'export FABRIC_PATH=' >> $START_ORDERER_DRIVER_NAME
+  echo $FABRIC_PATH >> $START_ORDERER_DRIVER_NAME
+  echo -n 'export FABRIC_CFG_PATH=' >> $START_ORDERER_DRIVER_NAME
+  echo $FABRIC_CFG_PATH >> $START_ORDERER_DRIVER_NAME
+  if [ "$DEBUG" = true ]; then
+    echo 'export GENERAL_LOGLEVEL=debug' >> $START_ORDERER_DRIVER_NAME
+  fi
+  start_process $START_ORDERER_DRIVER_NAME Kafka kafka 
+  echo -n 'LOG_FILE=' >> $START_ORDERER_DRIVER_NAME
+  echo -n '$FABRIC_PATH/' >> $START_ORDERER_DRIVER_NAME
+  echo -n $1 >> $START_ORDERER_DRIVER_NAME
+  echo '_orderer.out' >> $START_ORDERER_DRIVER_NAME
+  echo 'if [ -f $LOG_FILE ]; then' >> $START_ORDERER_DRIVER_NAME
+  echo '  rm $LOG_FILE' >> $START_ORDERER_DRIVER_NAME
+  echo 'fi' >> $START_ORDERER_DRIVER_NAME
+  echo '$FABRIC_PATH/build/bin/orderer &> $LOG_FILE &' >> $START_ORDERER_DRIVER_NAME
+  echo 'echo " - Orderer - Started"' >> $START_ORDERER_DRIVER_NAME
+
+  run_driver $START_ORDERER_DRIVER_NAME $1 $2
 }
 
-start_node() {
-  echo "----------"
-  echo " Start Hyperleder on Node $1"
-  echo "----------"
+start_peer() {
+  driver_header $START_PEER_DRIVER_NAME 'Block R Start Peer Driver'
+  daemon_control $START_PEER_DRIVER_NAME 
 
-  driver_header $START_NODE_DRIVER_NAME 'Block R Start Node Driver'
-
-  echo -n 'export FABRIC_PATH=' >> $START_NODE_DRIVER_NAME
-  echo $FABRIC_PATH >> $START_NODE_DRIVER_NAME
-  echo -n 'export FABRIC_CFG_PATH=' >> $START_NODE_DRIVER_NAME
-  echo $FABRIC_CFG_PATH >> $START_NODE_DRIVER_NAME
+  echo -n 'export FABRIC_PATH=' >> $START_PEER_DRIVER_NAME
+  echo $FABRIC_PATH >> $START_PEER_DRIVER_NAME
+  echo -n 'export FABRIC_CFG_PATH=' >> $START_PEER_DRIVER_NAME
+  echo $FABRIC_CFG_PATH >> $START_PEER_DRIVER_NAME
   if [ "$DEBUG" = true ]; then
-    echo 'export GENERAL_LOGLEVEL=debug' >> $START_NODE_DRIVER_NAME
-    echo 'export CORE_LOGGING_LEVEL=debug' >> $START_NODE_DRIVER_NAME
+    echo 'export CORE_LOGGING_LEVEL=debug' >> $START_PEER_DRIVER_NAME
   fi
-  echo 'echo " - Peer"' >> $START_NODE_DRIVER_NAME
-  echo -n 'LOG_FILE=' >> $START_NODE_DRIVER_NAME
-  echo -n '$FABRIC_PATH/' >> $START_NODE_DRIVER_NAME
-  echo -n $1 >> $START_NODE_DRIVER_NAME
-  echo '_peer.out' >> $START_NODE_DRIVER_NAME
-  echo 'if [ -f $LOG_FILE ]; then' >> $START_NODE_DRIVER_NAME
-  echo '  rm $LOG_FILE' >> $START_NODE_DRIVER_NAME
-  echo 'fi' >> $START_NODE_DRIVER_NAME
-  echo '$FABRIC_PATH/build/bin/peer node start &> $LOG_FILE &' >> $START_NODE_DRIVER_NAME
-  echo 'echo " - Orderer"' >> $START_NODE_DRIVER_NAME
-  echo -n 'LOG_FILE=' >> $START_NODE_DRIVER_NAME
-  echo -n '$FABRIC_PATH/' >> $START_NODE_DRIVER_NAME
-  echo -n $1 >> $START_NODE_DRIVER_NAME
-  echo '_orderer.out' >> $START_NODE_DRIVER_NAME
-  echo 'if [ -f $LOG_FILE ]; then' >> $START_NODE_DRIVER_NAME
-  echo '  rm $LOG_FILE' >> $START_NODE_DRIVER_NAME
-  echo 'fi' >> $START_NODE_DRIVER_NAME
-  echo '$FABRIC_PATH/build/bin/orderer &> $LOG_FILE &' >> $START_NODE_DRIVER_NAME
+  start_process $START_PEER_DRIVER_NAME CouchDB couchdb
+  echo -n 'LOG_FILE=' >> $START_PEER_DRIVER_NAME
+  echo -n '$FABRIC_PATH/' >> $START_PEER_DRIVER_NAME
+  echo -n $1 >> $START_PEER_DRIVER_NAME
+  echo '_peer.out' >> $START_PEER_DRIVER_NAME
+  echo 'if [ -f $LOG_FILE ]; then' >> $START_PEER_DRIVER_NAME
+  echo '  rm $LOG_FILE' >> $START_PEER_DRIVER_NAME
+  echo 'fi' >> $START_PEER_DRIVER_NAME
+  echo '$FABRIC_PATH/build/bin/peer node start &> $LOG_FILE &' >> $START_PEER_DRIVER_NAME
+  echo 'echo " - Peer - Started"' >> $START_PEER_DRIVER_NAME
 
-  run_driver $START_NODE_DRIVER_NAME $1 $2
+  run_driver $START_PEER_DRIVER_NAME $1 $2
 }
 
 echo ".----------------"
@@ -123,20 +126,17 @@ while [  $COUNTER -lt $zookeeper_count ]; do
 done
 
 #
-# start daemons
-#
-COUNTER=0
-while [  $COUNTER -lt $node_count ]; do
-  let COUNTER=COUNTER+1
-  start_daemons $(parse_lookup "$COUNTER" "$nodes") $(parse_lookup "$COUNTER" "$accounts")
-done
-
-#
 # start nodes 
 #
 COUNTER=0
 while [  $COUNTER -lt $node_count ]; do
   let COUNTER=COUNTER+1
-  start_node $(parse_lookup "$COUNTER" "$nodes") $(parse_lookup "$COUNTER" "$accounts")
+  node_name=$(parse_lookup "$COUNTER" "$nodes")
+  account_name=$(parse_lookup "$COUNTER" "$accounts")
+  echo "----------"
+  echo " Start Node $node_name"
+  echo "----------"
+  start_peer $node_name $account_name 
+  start_orderer $node_name $account_name 
 done
 
