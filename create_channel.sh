@@ -1,7 +1,7 @@
 #!/bin/bash
 
 CONFIG_DIR=blockr_config
-DEBUG=false
+DEBUG=true
 DELAY_TIME=60
 FABRIC_PATH=$GOPATH/src/github.com/hyperledger/fabric
 FABRIC_CFG_PATH=$FABRIC_PATH/$CONFIG_DIR
@@ -83,7 +83,7 @@ join_channel() {
   driver_header $JOIN_CHANNEL_DRIVER_NAME 'Block R Join Channel Driver'
 
   echo -n 'export ANCHOR_PEER_NAME=' >> $JOIN_CHANNEL_DRIVER_NAME
-  echo -n $2 >> $JOIN_CHANNEL_DRIVER_NAME
+  echo -n $5 >> $JOIN_CHANNEL_DRIVER_NAME
   echo '-anchor.tx' >> $JOIN_CHANNEL_DRIVER_NAME
   echo -n 'export CORE_PEER_MSPCONFIGPATH=' >> $JOIN_CHANNEL_DRIVER_NAME
   echo -n $FABRIC_CFG_PATH >> $JOIN_CHANNEL_DRIVER_NAME
@@ -179,7 +179,7 @@ create_channel $(parse_lookup 1 "$nodes") $(parse_lookup 1 "$peers") $(parse_loo
 COUNTER=0
 while [  $COUNTER -lt $node_count ]; do
   let COUNTER=COUNTER+1
-  join_channel $(parse_lookup "$COUNTER" "$nodes") $(parse_lookup "$COUNTER" "$peers") $(parse_lookup "$COUNTER" "$domains") $(parse_lookup "$COUNTER" "$accounts")
+  join_channel $(parse_lookup "$COUNTER" "$nodes") $(parse_lookup "$COUNTER" "$peers") $(parse_lookup "$COUNTER" "$domains") $(parse_lookup "$COUNTER" "$accounts") $(parse_lookup "$COUNTER" "$peer_names")
 done
 
 
