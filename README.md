@@ -87,7 +87,10 @@ You can either execute scripts from the `run.sh` interactive script or run them 
 Here is the sequence of operations neeeded to install a network.  It is important that theses scripts are run in order.  They have been designed to capture particularly sensitive sequences inside of scripts to avoid probles.  For instance, the sequence of operations needed to bring up Zookeeper, Kafka and CouchDB daemons is sensitive and thus are contained with the `provision.sh` script: 
 
 - `reset_nodes.sh` - ensures there are no artifacts remaining on any of the nodes.
-- `provision.sh` - prepares each node using configuration information from the `blockr-config.yaml` and `confitx.yaml` files in the templates directory.  Creates blocks and transactions required fro the `blockr` channel.    
+- `provision.sh` - performs three operations:
+  - prepares each node using configuration information from the `blockr-config.yaml` and `confitx.yaml` files in the templates directory
+  - creates blocks and transactions required for the `blockr` channel
+  - packages validation chaincode using the first node specified in the `config.sh` file.  Make sure you can ssh without passwords from the first node in the `consif.sh` to all nodes to avoid being prompted for a password.    
 - `start_nodes.sh` - starts peer and orderer daemons on each node of the system. 
 - `create_channel.sh` - performs three operations on the peer of each node:
   - defines the `blockr` channel 
