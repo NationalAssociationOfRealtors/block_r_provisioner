@@ -8,6 +8,7 @@ FABRIC_PATH=$GOPATH/src/github.com/hyperledger/fabric
 KAFKA_DIR=/var/kafka-logs
 HYPERLEDGER_DIR=/var/hyperledger
 LOCAL_CFG_PATH=./$CONFIG_DIR
+PACKAGE_CHAINCODE_DRIVER_NAME=package_chaincode_driver.sh
 PREPARE_DRIVER_NAME=prepare_node_driver.sh
 RESET_DRIVER_NAME=reset_node_driver.sh
 RESET_ZOOKEEPER_DRIVER_NAME=reset_zookeeper_driver.sh
@@ -16,6 +17,61 @@ TEMP_CFG_PATH=./$CONFIG_DIR.temp
 WITH_ANCHOR_PEERS=true
 WITH_TLS=true
 ZOOKEEPER_DIR=/var/zookeeper
+
+package_chaincode() {
+  echo "----------"
+  echo " Package chaincode on $1 then distribute"
+  echo "----------"
+
+  scp -q ./chaincode/blockr_example.go $2@$1:$TARGET_CFG_PATH
+
+  driver_header $PACKAGE_CHAINCODE_DRIVER_NAME 'Block R Package Chaincode Driver'
+
+  echo -n 'export GOPATH=' >> $PACKAGE_CHAINCODE_DRIVER_NAME
+  echo $GOPATH >> $PACKAGE_CHAINCODE_DRIVER_NAME
+  echo -n 'export FABRIC_CFG_PATH=' >> $PACKAGE_CHAINCODE_DRIVER_NAME
+  echo $TARGET_CFG_PATH >> $PACKAGE_CHAINCODE_DRIVER_NAME
+  echo -n 'FABRIC_PATH=' >> $PACKAGE_CHAINCODE_DRIVER_NAME
+  echo $FABRIC_PATH >> $PACKAGE_CHAINCODE_DRIVER_NAME
+  echo -n 'CHAINCODE_ID=' >> $PACKAGE_CHAINCODE_DRIVER_NAME
+  echo $CHAINCODE_ID >> $PACKAGE_CHAINCODE_DRIVER_NAME
+  echo -n 'CHAINCODE_VERSION=' >> $PACKAGE_CHAINCODE_DRIVER_NAME
+  echo $CHAINCODE_VERSION >> $PACKAGE_CHAINCODE_DRIVER_NAME
+  echo -n 'PACKAGE_PATH=' >> $PACKAGE_CHAINCODE_DRIVER_NAME
+  echo  $TARGET_CFG_PATH >> $PACKAGE_CHAINCODE_DRIVER_NAME
+  echo -n 'CHAINCODE_LOCATION=github.com/hyperledger/fabric/' >> $PACKAGE_CHAINCODE_DRIVER_NAME
+  echo $CONFIG_DIR >> $PACKAGE_CHAINCODE_DRIVER_NAME
+  echo -n '$FABRIC_PATH/build/bin/peer chaincode package -n $CHAINCODE_ID -v $CHAINCODE_VERSION -p $CHAINCODE_LOCATION -s -S $FABRIC_CFG_PATH/$CHAINCODE_ID' >> $PACKAGE_CHAINCODE_DRIVER_NAME
+  if [ "$DEBUG" != true ]; then
+    echo '.pack &> /dev/null' >> $PACKAGE_CHAINCODE_DRIVER_NAME
+  else
+    echo '.pack' >> $PACKAGE_CHAINCODE_DRIVER_NAME
+  fi
+
+  COUNTER=0
+  while [  $COUNTER -lt $node_count ]; do
+    let COUNTER=COUNTER+1
+    target=$(parse_lookup "$COUNTER" "$nodes")
+    if ! [ $1 == $target ]; then
+    target_account=$(parse_lookup "$COUNTER" "$accounts")
+    echo -n 'echo " - ' >> $PACKAGE_CHAINCODE_DRIVER_NAME
+    echo -n $target >> $PACKAGE_CHAINCODE_DRIVER_NAME
+    echo '"' >> $PACKAGE_CHAINCODE_DRIVER_NAME
+    echo -n 'scp -rq ' >> $PACKAGE_CHAINCODE_DRIVER_NAME
+    echo -n $TARGET_CFG_PATH >> $PACKAGE_CHAINCODE_DRIVER_NAME
+    echo -n '/' >> $PACKAGE_CHAINCODE_DRIVER_NAME
+    echo -n $CHAINCODE_ID >> $PACKAGE_CHAINCODE_DRIVER_NAME
+    echo -n '.pack ' >> $PACKAGE_CHAINCODE_DRIVER_NAME
+    echo -n $target_account >> $PACKAGE_CHAINCODE_DRIVER_NAME
+    echo -n '@' >> $PACKAGE_CHAINCODE_DRIVER_NAME
+    echo -n $target >> $PACKAGE_CHAINCODE_DRIVER_NAME
+    echo -n ':' >> $PACKAGE_CHAINCODE_DRIVER_NAME
+    echo $TARGET_CFG_PATH >> $PACKAGE_CHAINCODE_DRIVER_NAME
+    fi
+  done
+
+  run_driver $PACKAGE_CHAINCODE_DRIVER_NAME $1 $2
+}
 
 create_anchor() {
   ANCHOR_PEER_NAME=$LOCAL_CFG_PATH/$1-anchor.tx
@@ -442,27 +498,8 @@ done
 
 rm -rf $LOCAL_CFG_PATH 
 
-echo "----------"
-echo " Generate chaincode package"
-echo "----------"
-export FABRIC_CFG_PATH=$FABRIC_PATH/$CONFIG_DIR
-CHAINCODE_NAME=./chaincode/blockr_example.go
-CHAINCODE_PATH=$FABRIC_PATH/test_config
-mkdir -p $CHAINCODE_PATH
-cp $CHAINCODE_NAME $CHAINCODE_PATH
-CHAINCODE_LOCATION=github.com/hyperledger/fabric/test_config
-$FABRIC_PATH/build/bin/peer chaincode package -n $CHAINCODE_ID -v $CHAINCODE_VERSION -p $CHAINCODE_LOCATION -s -S $CHAINCODE_PATH/$CHAINCODE_ID.pack &> /dev/null
-
-echo "----------"
-echo " Distribute chaincode package"
-echo "----------"
-COUNTER=0
-while [  $COUNTER -lt $node_count ]; do
-  let COUNTER=COUNTER+1 
-  target=$(parse_lookup "$COUNTER" "$nodes")
-  target_account=$(parse_lookup "$COUNTER" "$accountss")
-  echo " - $target"
-  scp -rq $CHAINCODE_PATH/$CHAINCODE_ID.pack $target_account@$target:$TARGET_CFG_PATH
-done
-rm -rf $CHAINCODE_PATH 
+#
+# Package and distribute validation chaincode 
+#
+package_chaincode $(parse_lookup 1 "$nodes") $(parse_lookup 1 "$accounts")
 
