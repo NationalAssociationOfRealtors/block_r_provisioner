@@ -1,8 +1,8 @@
 
-export DEBUG=false
-export FABRIC=$GOPATH/src/github.com/hyperledger/fabric
-export INSTALL_DRIVER_NAME=install_blockr_driver.sh
-export MASTER_BRANCH=true
+DEBUG=false
+FABRIC=$GOPATH/src/github.com/hyperledger/fabric
+INSTALL_DRIVER_NAME=install_blockr_driver.sh
+MASTER_BRANCH=true
 
 echo ".----------------"
 echo "|"
@@ -18,26 +18,21 @@ echo '#' >> $INSTALL_DRIVER_NAME
 echo '# Block R Installation Driver' >> $INSTALL_DRIVER_NAME
 echo '#' >> $INSTALL_DRIVER_NAME
 echo '#----------------' >> $INSTALL_DRIVER_NAME
-echo -n 'export FABRIC=' >> $INSTALL_DRIVER_NAME
+echo -n 'FABRIC=' >> $INSTALL_DRIVER_NAME
 echo $FABRIC >> $INSTALL_DRIVER_NAME
 echo 'echo " - Install Hyperledger"' >> $INSTALL_DRIVER_NAME
-echo -n 'if [ -d ' >> $INSTALL_DRIVER_NAME
-echo -n $FABRIC >> $INSTALL_DRIVER_NAME
-echo ' ]; then' >> $INSTALL_DRIVER_NAME
-echo -n '  echo "GO directory ' >> $INSTALL_DRIVER_NAME
-echo -n $FABRIC >> $INSTALL_DRIVER_NAME
-echo ' already exists, it will be removed"' >> $INSTALL_DRIVER_NAME
-echo -n '  rm -rf ' >> $INSTALL_DRIVER_NAME
-echo $FABRIC >> $INSTALL_DRIVER_NAME
+echo 'if [ -d $FABRIC ]; then' >> $INSTALL_DRIVER_NAME
+echo '  echo "GO directory $FABRIC already exists, it will be removed"' >> $INSTALL_DRIVER_NAME
+echo '  rm -rf $FABRIC' >> $INSTALL_DRIVER_NAME
 echo 'fi' >> $INSTALL_DRIVER_NAME
-echo -n 'mkdir -p ' >> $INSTALL_DRIVER_NAME
-echo $FABRIC >> $INSTALL_DRIVER_NAME
-echo -n 'chown -R $(whoami):$(whoami) ' >> $INSTALL_DRIVER_NAME
-echo $FABRIC >> $INSTALL_DRIVER_NAME
-echo -n 'git clone https://github.com/hyperledger/fabric ' >> $INSTALL_DRIVER_NAME
-echo $FABRIC >> $INSTALL_DRIVER_NAME
-echo -n 'cd ' >> $INSTALL_DRIVER_NAME
-echo $FABRIC >> $INSTALL_DRIVER_NAME
+#echo 'mkdir -p $FABRIC' >> $INSTALL_DRIVER_NAME
+#echo 'chown -R $(whoami):$(whoami) $FABRIC' >> $INSTALL_DRIVER_NAME
+echo 'git clone https://github.com/hyperledger/fabric $FABRIC' >> $INSTALL_DRIVER_NAME
+echo 'if ! [ -d $FABRIC ]; then' >> $INSTALL_DRIVER_NAME
+echo '  echo "ERROR - git repository not accessible"' >> $INSTALL_DRIVER_NAME
+echo '  exit' >> $INSTALL_DRIVER_NAME
+echo 'fi' >> $INSTALL_DRIVER_NAME
+echo 'cd $FABRIC' >> $INSTALL_DRIVER_NAME
 if [ "$MASTER_BRANCH" == true ]; then
   echo "echo 'Change to the master branch'" >> $INSTALL_DRIVER_NAME 
   echo 'git checkout master' >> $INSTALL_DRIVER_NAME 
@@ -57,11 +52,12 @@ echo -n $CURRENT_LOCATION >> $INSTALL_DRIVER_NAME
 echo '/scripts/zookeeper.service /etc/systemd/system' >> $INSTALL_DRIVER_NAME
 echo 'sudo chmod 755 /etc/systemd/system/zookeeper.service' >> $INSTALL_DRIVER_NAME
 echo 'sudo systemctl daemon-reload' >> $INSTALL_DRIVER_NAME
-scp -q ./$INSTALL_DRIVER_NAME localhost:
-ssh localhost "chmod 777 $INSTALL_DRIVER_NAME"
-ssh localhost "./$INSTALL_DRIVER_NAME"
+
+scp -q ./$INSTALL_DRIVER_NAME $HOSTNAME:
+ssh $HOSTNAME "chmod 777 $INSTALL_DRIVER_NAME"
+ssh $HOSTNAME "./$INSTALL_DRIVER_NAME"
 if [ "$DEBUG" != true ]; then
-  ssh localhost "rm ./$INSTALL_DRIVER_NAME"
+  ssh $HOSTNAME "rm ./$INSTALL_DRIVER_NAME"
 fi
 rm ./$INSTALL_DRIVER_NAME
 
