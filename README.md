@@ -31,7 +31,8 @@ This tool was created to help maintain the regional Block R processing nodes.  H
 `cp $GOPATH/bin/protoc-gen-go $GOPATH/src/github.com/hyperledger/fabric/build/docker/gotools/bin`
 - If you would like to work from the Hyperledger Fabric master channel, change the `MASTER_BRANCH` variable to `true`
 - Setting the `DEBUG` to `true` will leave a copy of script in the home directory to give you a chance to instapect the file.   
-3. Edit `config.sh` in the root directory with the following information: 
+3. Copy the `config.sh-sample` file in the root directory to `config.sh'
+4. Edit `config.sh` in the root directory with the following information: 
 - zookeepers: a space delimited list of server names that run zookeeper.  For example, "vm1 vm2".
 - zookeeper_accounts: a space delimited list of accounts that run zookeeper.  For example, "user1 user2a.  When used with `zookeepers` from above, can be used for ssh arguments like "user1@vm1" and user2@vm2"
 - nodes: a space delimited list of server names operating regional nodes.  For eample, "west1 central1 east2".
@@ -41,8 +42,7 @@ This tool was created to help maintain the regional Block R processing nodes.  H
 - orderers: a space delimited list of names representing orderer MSPs.  For example, "Orderer1MSP Orderer2MSP Orderer3MSP".
 - peer_names: a space delimited list of names representing peers.  For example, "WEST-Peer-0 CENTRAL-Peer-0 EAST-Peer-0".
 - peers: a space delimited list of names representing peer MSPs.  For example, "Org1MSP Org2MSP Org3MSP".
-
-4. Provision the system using the instructions below. 
+5. Provision the system using the instructions below. 
 
 ---
 
