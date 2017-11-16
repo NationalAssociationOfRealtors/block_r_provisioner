@@ -23,7 +23,7 @@ shutdown_orderer() {
   driver_header $STOP_ORDERER_DRIVER_NAME 'Block R Stop Orderer Driver'
 
   echo 'echo -n " - Orderer "' >> $STOP_ORDERER_DRIVER_NAME
-  echo 'sudo pkill /bin/orderer' >> $STOP_ORDERER_DRIVER_NAME
+  echo 'sudo pkill -f /bin/orderer' >> $STOP_ORDERER_DRIVER_NAME
   echo 'echo " - Stopped"' >> $STOP_ORDERER_DRIVER_NAME
   stop_process $STOP_ORDERER_DRIVER_NAME Kafka kafka 
 
@@ -34,7 +34,7 @@ shutdown_peer() {
   driver_header $STOP_PEER_DRIVER_NAME 'Block R Stop Peer Driver'
 
   echo 'echo -n " - Peer "' >> $STOP_PEER_DRIVER_NAME
-  echo 'sudo pkill /bin/peer' >> $STOP_PEER_DRIVER_NAME
+  echo 'sudo pkill -f /bin/peer' >> $STOP_PEER_DRIVER_NAME
   echo 'echo "- Stopped"' >> $STOP_PEER_DRIVER_NAME
   stop_process $STOP_PEER_DRIVER_NAME CouchDB couchdb 
 
