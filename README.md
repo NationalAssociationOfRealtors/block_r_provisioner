@@ -145,8 +145,8 @@ It is in everyone's interest to report changes and improvements in configurtion.
 
 Two files controlling a Hyperledger setup are auto-configured by the contents of the `config.sh` file.  They are created and distributed by the `provision.sh` script.
 
-- The `blockr-config.yaml` - Contains the names and locations of the various peers and orderers in your system. 
-- configtx.yaml` - Contains confiigurations for both the genesis block of the system as well as any channels you would like to define.
+- `blockr-config.yaml` - Contains the names and locations of the various peers and orderers in your system. 
+- `configtx.yaml` - Contains confiigurations for both the genesis block of the system as well as any channels you would like to define.
   - Profiles section: You will find the obvious names `Genesis` and `Channels`.  If you would like to define multiple channels, create another section under `Profiles` using `Channels` as a pattern.
   - Organizations section: Defines the various servers and which encryption keys to use for each.  If you would like a node to have nultiple peers (in order to handle heavy transaction loads), use the AnchorPeers section to point to identify the server that takes the lead when exchanging information with other servers.
   - Orderer:  This section defines how Orderers exchange information and the addresses of each orderer.  We are usinf Kafka to enable communication between Orderes, so the address of each Kafka server needs to be defined.
