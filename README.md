@@ -94,9 +94,10 @@ You can either execute scripts from the `run.sh` interactive script or run them 
 Here is the sequence of operations neeeded to install a network.  It is important that theses scripts are run in order.  They have been designed to capture particularly sensitive sequences inside of scripts to avoid problems.  For instance, the sequence of operations needed to bring up Zookeeper, Kafka and CouchDB daemons is sensitive and thus are contained with the `start_nodes.sh` and `stop_nodes.sh` scripts: 
 
 - `provision.sh` - performs three operations:
-  - prepares each node using configuration information from the `blockr-config.yaml` and `confitx.yaml` files in the templates directory
+  - creates configuration information from the `config.sh` file.  It creates a `blockr-config.yaml` and `confitx.yaml` files.
   - creates blocks and transactions required for the `blockr` channel
   - packages validation chaincode using the first node specified in the `config.sh` file.  Make sure you can ssh without passwords from the first node in the `consif.sh` to all nodes to avoid being prompted for a password.    
+  - distributes configuration information and chaincode to each server.
 - `create_channel.sh` - performs three operations on the peer of each node:
   - defines the `blockr` channel 
   - joins the `blockr` channel 
@@ -137,6 +138,22 @@ Here on notes for changing the pre-configured network:
 - The `zookeeper.properties` file contains configuration parameters for the zookeer instance that runs on each node.  There is very little to configure in this file. 
 
 It is in everyone's interest to report changes and improvements in configurtion.  Remember to post your results.
+
+---
+
+**Generated Configuration Files**
+
+Two files controlling a Hyperledger setup are auto-configured by the contents of the `config.sh` file.  They are created and distributed by the `provision.sh` script.
+
+- The `blockr-config.yaml` - Contains the names and locations of the various peers and orderers in your system. 
+- configtx.yaml` - Contains confiigurations for both the genesis block of the system as well as any channels you would like to define.
+  - Profiles section: You will find the obvious names `Genesis` and `Channels`.  If you would like to define multiple channels, create another section under `Profiles` using `Channels` as a pattern.
+  - Organizations section: Defines the various servers and which encryption keys to use for each.  If you would like a node to have nultiple peers (in order to handle heavy transaction loads), use the AnchorPeers section to point to identify the server that takes the lead when exchanging information with other servers.
+  - Orderer:  This section defines how Orderers exchange information and the addresses of each orderer.  We are usinf Kafka to enable communication between Orderes, so the address of each Kafka server needs to be defined.
+  - Application: Special configuration information for applications.  No applications configurations are defined in the distribution, but you should have this section defined.
+  - Capabilities: The distribution ensures that all processing is conducted with Hyyperledger V1.1 capabilities.  These capabilities are defined in the distribution, but you should have this section defined.
+
+The long term goal of this project is to be able to modify these files once created. 
 
 ---
 
