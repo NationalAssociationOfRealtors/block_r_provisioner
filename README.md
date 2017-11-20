@@ -112,7 +112,7 @@ When you are done testing, use the `stop_nodes.sh` script to stop the nodes.
 
 **Configuration**
 
-All configuration is conducted on files in the `templates` directory.  The distribution is pre-configured for a two node system.  These nodes are called `vm1` and `vm2`.  You can add more servers by modifying `conrfsig.sh`  
+All configuration is conducted on files in the `templates` directory.  The distribution is pre-configured for a two node system.  These nodes are called `vm1` and `vm2`.  You can add more servers by modifying `config.sh`  
 
 In order to test run the system, set up two Centos 7 servers and define their addresses in `/etc/hosts`.  
 
